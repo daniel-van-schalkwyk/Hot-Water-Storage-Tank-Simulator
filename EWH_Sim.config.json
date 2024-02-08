@@ -1,0 +1,109 @@
+{
+    "metaData": {
+        "simName": "sim_test",
+        "username": "Daniel",
+        "date": "2024-02-01T12:00:00",
+        "save": false,
+        "runID": 1
+    },
+    "config": {
+        "orientation": "H", 
+        "tWall": 0.0015,
+        "longLength": 1.19,
+        "diameter": 0.4,
+        "capacity": 0.15,
+        "layerConfig": "CH",
+        "nodeNumber": 25
+    },
+    "simParameters": {
+        "startTime": "2024-02-05T12:00:00",
+        "dt": 60,
+        "timeSteps": 12000,
+        "nodeNumber": 25,
+        "tempInit": 20
+    },
+    "input": {
+        "Tset": {
+            "unit": "°C",
+            "value": 60
+        },
+        "coilPower": {
+            "unit": "W",
+            "value": 3000
+        },
+        "ambTemp": {
+            "unit": "°C",
+            "value": 20
+        },
+        "events": {
+            "discharge": [
+                {
+                    "start": "2024-02-05T13:00:00",
+                    "stop": "2024-02-05T13:10:00",
+                    "inletTemp": {
+                        "unit": "°C",
+                        "value": 25
+                    },
+                    "flowRate": {
+                        "unit": "m^3/s",
+                        "value": 0.2
+                    },
+                    "duration": {
+                        "unit": "timesteps",
+                        "value": 10
+                    }
+                }
+            ],
+            "charge": [
+                {
+                    "start": "2024-02-05T14:00:00",
+                    "stop": "2024-02-05T14:20:00",
+                    "inletTemp": {
+                        "unit": "°C",
+                        "value": 60
+                    },
+                    "flowRate": {
+                        "unit": "m^3/s",
+                        "value": 0.2
+                    },
+                    "duration": {
+                        "unit": "timesteps",
+                        "value": 20
+                    }
+                }
+            ],
+            "powerOff": [
+                {
+                    "start": "2024-02-05T15:00:00",
+                    "stop": "2024-02-05T17:00:00",
+                    "duration": {
+                        "unit": "timesteps",
+                        "value": 120
+                    }
+                }
+            ]
+        }
+    },
+    "output": {
+        "stateOfCharge": {
+            "plot": true,
+            "csv": true
+        },
+        "tempTemporalProfile": {
+            "plot": true,
+            "csv": true
+        },
+        "tempSpatialProfile": {
+            "plot": true,
+            "csv": true
+        },
+        "energyUsed": {
+            "plot": true,
+            "csv": true
+        },
+        "eventsProfile": {
+            "plot": true,
+            "csv": true
+        }
+    }
+}
