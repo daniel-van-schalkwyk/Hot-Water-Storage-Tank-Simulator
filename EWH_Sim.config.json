@@ -1,5 +1,5 @@
 {
-    "metaData": {
+    "general": {
         "simName": "sim_test",
         "username": "Daniel",
         "date": "2024-02-01T12:00:00",
@@ -17,9 +17,8 @@
     },
     "simParameters": {
         "startTime": "2024-02-05T12:00:00",
+        "stopTime": "2024-02-05T16:00:00",
         "dt": 60,
-        "timeSteps": 12000,
-        "nodeNumber": 25,
         "tempInit": 20
     },
     "input": {

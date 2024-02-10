@@ -5,8 +5,14 @@ classdef EHWST_Simulator
             %   and executes fundemental methods to the simulation
 
     properties
-        ConfigJson
-        TankGeom
+        ConfigJson struct
+        SimParams struct
+        SimStartTime datetime
+        SimStopTime datetime
+        SimDuration duration
+        Delta_t int32
+        TimeSteps int32
+        TankGeom 
     end
 
     % Public methods
@@ -45,6 +51,9 @@ classdef EHWST_Simulator
                 fprintf('An error occurred: %s\n', ex.message);
                 throw ex;
             end
+
+            % Populate the simulation parameters
+            obj = populateSimParameters(obj);
         end
     end
 
@@ -76,7 +85,28 @@ classdef EHWST_Simulator
                 obj.TankGeom.n = obj.ConfigJson.config.nodeNumber;
                 obj.TankGeom.orientation = obj.ConfigJson.config.orientation;
                 obj.TankGeom.layerConfig = obj.ConfigJson.config.layerConfig;
-            catch
+            catch ex
+                fprintf('An error occurred: %s\n', ex.message);
+                throw ex;
+            end
+        end
+    
+        function obj = populateSimParameters(obj)
+            
+            try
+                obj.SimStartTime = datetime(obj.ConfigJson.simParameters.startTime);
+                obj.SimStopTime = datetime(obj.ConfigJson.simParameters.stopTime);
+                obj.Delta_t = int32(obj.ConfigJson.simParameters.dt);
+                obj.SimParams = obj.ConfigJson.simParameters;
+            catch ex
+                fprintf('An error occurred: %s\n', ex.message);
+                throw ex;
+            end
+            
+            try
+                obj.SimDuration = obj.SimStopTime - obj.SimStartTime;
+                obj.TimeSteps = ceil(seconds(obj.SimDuration)/obj.Delta_t);
+            catch ex
                 fprintf('An error occurred: %s\n', ex.message);
                 throw ex;
             end
