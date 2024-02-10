@@ -1,0 +1,25 @@
+﻿<Window x:Class="EWH_Sim_UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EWH_Sim_UI"
+        mc:Ignorable="d"
+        Title="EWH Simulation Parameter Editor" Height="350" Width="525">
+    <DockPanel>
+        <TabControl>
+            <TabItem Header="General">
+                <StackPanel>
+                    <Label Content="Simulation Name"/>
+                    <TextBox x:Name="txtSimulationName"/>
+                    <Label Content="Description"/>
+                    <TextBox x:Name="txtDescription"/>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Config">
+                <!-- Place Config UI here -->
+            </TabItem>
+            <!-- Add more TabItems for other sections -->
+        </TabControl>
+    </DockPanel>
+</Window>
