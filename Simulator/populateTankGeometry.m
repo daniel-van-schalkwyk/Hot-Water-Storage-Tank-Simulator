@@ -1,13 +1,13 @@
 function tankGeometryStruct = populateTankGeometry(tankGeom)
     tankGeom.V = pi*tankGeom.R^2*tankGeom.L;     % Volume [m^3]
     % Calculated base on tankGeom input
-    if(strcmp(tankGeom.orientation, 'vertical'))
+    if(strcmp(tankGeom.orientation, 'V'))
         tankGeom.z_delta = tankGeom.L/tankGeom.n;
         tankGeom.h_layers = linspace(tankGeom.z_delta, tankGeom.L, tankGeom.n);
         tankGeom.h_sensors = tankGeom.h_layers - tankGeom.z_delta/2;
         % Determine the node volumes of the CHP buffer tank
         tankGeom.layerVolumes = getNodeVolumes(tankGeom);
-    elseif(strcmp(tankGeom.orientation, 'horizontal'))
+    elseif(strcmp(tankGeom.orientation, 'H'))
         if(strcmp(tankGeom.layerConfig, 'CH'))
             % In this case, volumes will vary while layer heights will remain
             % constant
