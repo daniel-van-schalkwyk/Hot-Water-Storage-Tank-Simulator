@@ -2,22 +2,6 @@ classdef EwhGeometryTools
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
 
-    properties (Access = public)
-        PhysicalParams
-    end
-
-    properties (Access = private)
-        physicalParams
-    end
-
-    %% Public methods
-    methods (Access = public)
-        function obj = EwhGeometryTools(tankGeom)
-
-
-        end
-    end
-
     %% Static methods
     methods (Static)
         
