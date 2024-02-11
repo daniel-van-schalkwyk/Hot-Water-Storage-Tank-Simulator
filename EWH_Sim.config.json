@@ -16,12 +16,16 @@
         "nodeNumber": 49
     },
     "simParameters": {
-        "startTime": "2024-02-05T12:00:00",
-        "stopTime": "2024-02-05T16:00:00",
+        "startTime": "2024-02-05T00:00:00",
+        "stopTime": "2024-02-06T00:00:00",
         "dt": 60,
         "tempInit": 20
     },
     "input": {
+        "source": {
+            "csv": false,
+            "filePath": ""
+        },
         "tempSet": {
             "unit": "°C",
             "value": 60
@@ -79,6 +83,14 @@
                         "unit": "timesteps",
                         "value": 120
                     }
+                },
+                {
+                    "start": "2024-02-05T20:00:00",
+                    "stop": "2024-02-05T22:00:00",
+                    "duration": {
+                        "unit": "timesteps",
+                        "value": 120
+                    }
                 }
             ]
         }
@@ -86,23 +98,28 @@
     "output": {
         "stateOfCharge": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "tempTemporalProfile": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "tempSpatialProfile": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "energyUsed": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "eventsProfile": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         }
     }
 }

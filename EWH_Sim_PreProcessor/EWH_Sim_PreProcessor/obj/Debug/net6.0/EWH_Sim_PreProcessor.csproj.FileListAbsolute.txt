@@ -15,3 +15,4 @@ C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator
 C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EWH_Sim_PreProcessor\EWH_Sim_PreProcessor\obj\Debug\net6.0\EWH_Sim_PreProcessor.pdb
 C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EWH_Sim_PreProcessor\EWH_Sim_PreProcessor\obj\Debug\net6.0\EWH_Sim_PreProcessor.genruntimeconfig.cache
 C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EWH_Sim_PreProcessor\EWH_Sim_PreProcessor\obj\Debug\net6.0\ref\EWH_Sim_PreProcessor.dll
+C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EWH_Sim_PreProcessor\EWH_Sim_PreProcessor\bin\Debug\net6.0\Serilog.dll
