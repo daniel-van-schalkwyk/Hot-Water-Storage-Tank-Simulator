@@ -44,10 +44,6 @@ classdef EHWST_Simulator
 
             % Populate the simulation parameters
             obj = populateSimParameters(obj);
-
-            % Populate input parameters
-
-            % Populate the events of the simulation
         end
 
         %% Some Geometric figures
@@ -56,7 +52,7 @@ classdef EHWST_Simulator
             tankGeomModel = obj.TankGeom;
 
             % Plot the cross-sectional area of the adjacent layers
-            A_crossSecFig = figure;
+            a = figure
             b = bar(tankGeomModel.A_crossSec(1:end-1)', LineWidth=1);
             b(1).FaceColor = 'k'; 
             b(1).FaceAlpha = 0.7; 
@@ -82,8 +78,6 @@ classdef EHWST_Simulator
             xlabel("Layer number")
             customLabels = {'0', '1', '2', '3', '4', '5', '6', '7', '8'};
             xticklabels(customLabels);
-
-            figures = {A_crossSecFig};
         end
 
         function createAnimation(obj, urlDestination)

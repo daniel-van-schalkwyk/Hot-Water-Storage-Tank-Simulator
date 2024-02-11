@@ -1,10 +1,10 @@
 {
-    "metaData": {
+    "general": {
         "simName": "sim_test",
         "username": "Daniel",
         "date": "2024-02-01T12:00:00",
-        "save": false,
-        "runID": 1
+        "saveData": false,
+        "id": 1
     },
     "config": {
         "orientation": "H", 
@@ -12,18 +12,17 @@
         "longLength": 1.19,
         "diameter": 0.4,
         "capacity": 0.15,
-        "layerConfig": "CH",
-        "nodeNumber": 25
+        "layerConfig": "CV",
+        "nodeNumber": 49
     },
     "simParameters": {
         "startTime": "2024-02-05T12:00:00",
+        "stopTime": "2024-02-05T16:00:00",
         "dt": 60,
-        "timeSteps": 12000,
-        "nodeNumber": 25,
         "tempInit": 20
     },
     "input": {
-        "Tset": {
+        "tempSet": {
             "unit": "°C",
             "value": 60
         },
@@ -31,7 +30,7 @@
             "unit": "W",
             "value": 3000
         },
-        "ambTemp": {
+        "ambientTemp": {
             "unit": "°C",
             "value": 20
         },
