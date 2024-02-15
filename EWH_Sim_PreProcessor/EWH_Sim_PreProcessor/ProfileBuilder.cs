@@ -4,12 +4,12 @@ namespace EWH_Sim_PreProcessor;
 
 public class ProfileBuilder
 {
-    public SimulationConfig SimConfig { get; set; }
-    public SimInputProfiles SimInputProfiles { get; set; }
-    public DateTime SimStartTime { get; set; }
-    public DateTime SimStopTime { get; set; }
-    public TimeSpan DeltaTime { get; set; }
-    public List<DateTime> TimeStamps { get; set; }
+    public SimulationConfig SimConfig { get; }
+    public SimInputProfiles SimInputProfiles { get; }
+    public DateTime SimStartTime { get; }
+    public DateTime SimStopTime { get; }
+    public TimeSpan DeltaTime { get; }
+    public List<DateTime> TimeStamps { get; }
     
     public ProfileBuilder(SimulationConfig simConfig)
     {
@@ -68,11 +68,14 @@ public class ProfileBuilder
     private GeneralProfile<decimal> BuildAmbientProfile()
     {
         GeneralProfile<decimal> ambientProfile = new();
-        const decimal defaultValue = 20;
+        decimal defaultValue = SimConfig.input.ambientTemp.value;
         
         // Create Default Profile
         ambientProfile.TimeStamps = TimeStamps;
-        ambientProfile.Values = ambientProfile.Values.Select(_ => defaultValue).ToList();
+        for (int i = 0; i < TimeStamps.Count; i++)
+        {
+            ambientProfile.Values.Add(defaultValue);
+        }
 
         return ambientProfile;
     }
@@ -92,9 +95,54 @@ public class ProfileBuilder
     private GeneralProfile<decimal> BuildFlowProfile()
     {
         GeneralProfile<decimal> flowProfile = new();
+        const decimal defaultValue = (decimal)0.00;
         
+        // Create Default Profile
+        flowProfile.TimeStamps = TimeStamps;
+        for (int i = 0; i < TimeStamps.Count; i++)
+        {
+            flowProfile.Values.Add(defaultValue);
+        }
+        
+        // Insert discharge events into the profile
+        AddEventsToFlowProfile(flowProfile, SimConfig.input.events.discharge);
+        
+        // Insert charge events into the profile if available
+        AddEventsToFlowProfile(flowProfile, SimConfig.input.events.charge, false);
 
         return flowProfile;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="flowProfile"></param>
+    /// <param name="flowEvents"></param>
+    /// <param name="discharge"></param>
+    private void AddEventsToFlowProfile(GeneralProfile<decimal> flowProfile, IEnumerable<FlowEvent> flowEvents, bool discharge = true)
+    {
+        foreach (FlowEvent eventEntry in flowEvents)
+        {
+            int startIndex = flowProfile.TimeStamps.IndexOf(eventEntry.start);
+            int stopIndex = flowProfile.TimeStamps.IndexOf(eventEntry.stop);
+            int indexRange = stopIndex - startIndex;
+
+            // Set the values of the event to the provided value
+            for (int i = startIndex; i < startIndex + indexRange && i < flowProfile.Values.Count; i++)
+            {
+                if (discharge)
+                {
+                    flowProfile.Values[i] = eventEntry.flowRate.value;
+                }
+                else
+                {
+                    if(eventEntry.flowRate.value < 0)
+                        flowProfile.Values[i] = eventEntry.flowRate.value;
+                    else
+                        flowProfile.Values[i] = -eventEntry.flowRate.value;
+                }
+            }
+        }
     }
     
     /// <summary>
