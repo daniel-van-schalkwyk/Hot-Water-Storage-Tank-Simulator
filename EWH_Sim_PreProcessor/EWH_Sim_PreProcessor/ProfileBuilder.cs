@@ -34,6 +34,28 @@ public class ProfileBuilder
         
         // Build input coil profiles
         SimInputProfiles.CoilPowerProfile = BuildInputCoilProfile();
+        
+        // Build Set temperature profile
+        SimInputProfiles.SetTempProfile = BuildSetTempProfile();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    private GeneralProfile<decimal> BuildSetTempProfile()
+    {
+        GeneralProfile<decimal> setTempProfile = new();
+        decimal defaultValue = SimConfig.input.tempSet.value;
+        
+        // Create Default Profile
+        setTempProfile.TimeStamps = TimeStamps;
+        for (int i = 0; i < TimeStamps.Count; i++)
+        {
+            setTempProfile.Values.Add(defaultValue);
+        }
+
+        return setTempProfile;
     }
 
     private GeneralProfile<bool> BuildPowerAvailabilityProfile()
@@ -65,6 +87,10 @@ public class ProfileBuilder
         return powerProfile;
     }
     
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     private GeneralProfile<decimal> BuildAmbientProfile()
     {
         GeneralProfile<decimal> ambientProfile = new();
@@ -80,18 +106,29 @@ public class ProfileBuilder
         return ambientProfile;
     }
     
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     private GeneralProfile<decimal> BuildInputCoilProfile()
     {
         GeneralProfile<decimal> inputCoilProfile = new();
-        const decimal defaultValue = 3000;
+        decimal defaultValue = SimConfig.input.coilPower.value;
         
         // Create Default Profile
         inputCoilProfile.TimeStamps = TimeStamps;
-        inputCoilProfile.Values = inputCoilProfile.Values.Select(_ => defaultValue).ToList();
+        for (int i = 0; i < TimeStamps.Count; i++)
+        {
+            inputCoilProfile.Values.Add(defaultValue);
+        }
         
         return inputCoilProfile;
     }
     
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
     private GeneralProfile<decimal> BuildFlowProfile()
     {
         GeneralProfile<decimal> flowProfile = new();

@@ -16,6 +16,11 @@ SimulationConfig configJson = JsonConvert.DeserializeObject<SimulationConfig>(fi
 try
 {
     ProfileBuilder profileBuilder = new(configJson);
+    for (int i = 0; i < profileBuilder.SimInputProfiles.FlowProfile.Values.Count; i++)
+    {
+        Console.WriteLine($"{profileBuilder.SimInputProfiles.FlowProfile.TimeStamps[i]} : {profileBuilder.SimInputProfiles.FlowProfile.Values[i]}");
+    }
+    
 }
 catch (Exception e)
 {
