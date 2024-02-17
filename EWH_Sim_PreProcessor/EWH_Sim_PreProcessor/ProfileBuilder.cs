@@ -38,12 +38,38 @@ public class ProfileBuilder
 
         // Build flow profile
         SimInputProfiles.FlowProfile = BuildFlowProfile();
+
+        SimInputProfiles.inletTempProfile = BuildInletTempProfile();
         
         // Build input coil profiles
         SimInputProfiles.CoilPowerProfile = BuildInputCoilProfile();
         
         // Build Set temperature profile
         SimInputProfiles.SetTempProfile = BuildSetTempProfile();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    private GeneralProfile<decimal> BuildInletTempProfile()
+    {
+        GeneralProfile<decimal> inletTempProfile = new();
+        const decimal defaultValue = 0;
+        
+        // Create Default Profile
+        for (int i = 0; i < TimeStamps.Count; i++)
+        {
+            inletTempProfile.Values.Add(defaultValue);
+        }
+        
+        // Insert discharge events into the profile
+        AddEventsToInletTempProfile(inletTempProfile, SimConfig.Input.events.discharge);
+        
+        // Insert charge events into the profile if available
+        AddEventsToInletTempProfile(inletTempProfile, SimConfig.Input.events.charge);
+
+        return inletTempProfile;
     }
 
     /// <summary>
@@ -196,6 +222,31 @@ public class ProfileBuilder
             
             // Set the unit
             flowProfile.Unit = SimConfig.Input.events.discharge.FirstOrDefault()?.flowRate.unit;
+        }
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="inletTempProfile"></param>
+    /// <param name="flowEvents"></param>
+    /// <param name="discharge"></param>
+    private void AddEventsToInletTempProfile(GeneralProfile<decimal> inletTempProfile, IEnumerable<FlowEvent> flowEvents)
+    {
+        foreach (FlowEvent eventEntry in flowEvents)
+        {
+            int startIndex = TimeStamps.IndexOf(eventEntry.start);
+            int stopIndex = TimeStamps.IndexOf(eventEntry.stop);
+            int indexRange = stopIndex - startIndex;
+
+            // Set the values of the event to the provided value
+            for (int i = startIndex; i < startIndex + indexRange && i < inletTempProfile.Values.Count; i++)
+            {
+                inletTempProfile.Values[i] = eventEntry.inletTemp.value;
+            }
+            
+            // Set the unit
+            inletTempProfile.Unit = SimConfig.Input.events.discharge.FirstOrDefault()?.inletTemp.unit;
         }
     }
     

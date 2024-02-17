@@ -9,7 +9,7 @@ public class GeneralProfile<TValueType>
     /// 
     /// </summary>
     [JsonProperty("values")]
-    public List<TValueType> Values { get; set; }
+    public List<TValueType?> Values { get; set; }
     
     /// <summary>
     /// 
@@ -20,6 +20,6 @@ public class GeneralProfile<TValueType>
     public GeneralProfile()
     {
         Unit = "";
-        Values = new List<TValueType>();
+        Values = new List<TValueType?>();
     }
 }

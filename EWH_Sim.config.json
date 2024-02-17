@@ -55,6 +55,18 @@
                         "unit": "timesteps",
                         "value": 30
                     }
+                },
+                {
+                    "start": "2024-02-05T21:00:00",
+                    "stop": "2024-02-05T22:30:00",
+                    "inletTemp": {
+                        "unit": "°C",
+                        "value": 30
+                    },
+                    "flowRate": {
+                        "unit": "m^3/s",
+                        "value": 0.1
+                    }
                 }
             ],
             "charge": [

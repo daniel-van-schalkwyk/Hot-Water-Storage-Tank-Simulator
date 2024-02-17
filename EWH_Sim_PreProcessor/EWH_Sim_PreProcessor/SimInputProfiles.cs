@@ -20,6 +20,9 @@ public class SimInputProfiles
     [JsonProperty("flowRate")]
     public GeneralProfile<decimal> FlowProfile { get; set; }
     
+    [JsonProperty("inletTemp")]
+    public GeneralProfile<decimal> inletTempProfile { get; set; }
+    
     [JsonProperty("powerAvailable")]
     public GeneralProfile<bool> PowerAvailableProfile { get; set; }
 }
