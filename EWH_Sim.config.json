@@ -7,18 +7,18 @@
         "id": 1
     },
     "config": {
-        "orientation": "H", 
+        "orientation": "H",
         "tWall": 0.0015,
         "longLength": 1.19,
         "diameter": 0.4,
         "capacity": 0.15,
-        "layerConfig": "CV",
+        "layerConfig": "CH",
         "nodeNumber": 49
     },
     "simParameters": {
         "startTime": "2024-02-05T00:00:00",
         "stopTime": "2024-02-06T00:00:00",
-        "dt": 60,
+        "dt": 30,
         "tempInit": 20
     },
     "input": {
@@ -41,8 +41,8 @@
         "events": {
             "discharge": [
                 {
-                    "start": "2024-02-05T13:00:00",
-                    "stop": "2024-02-05T13:10:00",
+                    "start": "2024-02-05T23:00:00",
+                    "stop": "2024-02-05T23:30:00",
                     "inletTemp": {
                         "unit": "°C",
                         "value": 25
@@ -53,7 +53,7 @@
                     },
                     "duration": {
                         "unit": "timesteps",
-                        "value": 10
+                        "value": 30
                     }
                 }
             ],

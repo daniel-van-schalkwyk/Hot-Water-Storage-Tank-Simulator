@@ -16,13 +16,20 @@ public class ProfileBuilder
         // Instantiate all appropriate variables
         SimConfig = simConfig;
         SimInputProfiles = new SimInputProfiles();
-        SimStartTime = SimConfig.simParameters.startTime;
-        SimStopTime = SimConfig.simParameters.stopTime;
-        DeltaTime = TimeSpan.FromSeconds((double)SimConfig.simParameters.dt);
+        SimStartTime = SimConfig.SimParameters.startTime;
+        SimStopTime = SimConfig.SimParameters.stopTime;
+        DeltaTime = TimeSpan.FromSeconds((double)SimConfig.SimParameters.dt);
         
         // Create TimeStamp Vector of simulation
         TimeStamps = GenerateTimeStampProfile(SimStartTime, SimStopTime, DeltaTime);
         
+        // Assign time stamp profiles
+        SimInputProfiles.Time = new GeneralProfile<DateTime>
+        {
+            Values = TimeStamps,
+            Unit = "YYYY-MM-DDTHH:mm:ss"
+        };
+
         // Build power availability profile
         SimInputProfiles.PowerAvailableProfile = BuildPowerAvailabilityProfile();
         
@@ -46,14 +53,16 @@ public class ProfileBuilder
     private GeneralProfile<decimal> BuildSetTempProfile()
     {
         GeneralProfile<decimal> setTempProfile = new();
-        decimal defaultValue = SimConfig.input.tempSet.value;
+        decimal defaultValue = SimConfig.Input.tempSet.value;
         
         // Create Default Profile
-        setTempProfile.TimeStamps = TimeStamps;
         for (int i = 0; i < TimeStamps.Count; i++)
         {
             setTempProfile.Values.Add(defaultValue);
         }
+
+        // Set the unit
+        setTempProfile.Unit = SimConfig.Input.tempSet.unit;
 
         return setTempProfile;
     }
@@ -63,18 +72,17 @@ public class ProfileBuilder
         GeneralProfile<bool> powerProfile = new();
 
         // Create Default Profile
-        powerProfile.TimeStamps = TimeStamps;
         for (int i = 0; i < TimeStamps.Count; i++)
         {
             powerProfile.Values.Add(true);
         }
         
         // Get the power off events 
-        List<GeneralEvent> powerOffEvents = SimConfig.input.events.powerOff;
+        List<GeneralEvent> powerOffEvents = SimConfig.Input.events.powerOff;
         foreach (GeneralEvent eventEntry in powerOffEvents)
         {
-            int startIndex = powerProfile.TimeStamps.IndexOf(eventEntry.start);
-            int stopIndex = powerProfile.TimeStamps.IndexOf(eventEntry.stop);
+            int startIndex = TimeStamps.IndexOf(eventEntry.start);
+            int stopIndex = TimeStamps.IndexOf(eventEntry.stop);
             int indexRange = stopIndex - startIndex;
 
             // Set the values of the event to false to indicate no power
@@ -83,6 +91,9 @@ public class ProfileBuilder
                 powerProfile.Values[i] = false;
             }
         }
+        
+        // Set the unit
+        powerProfile.Unit = "bool";
         
         return powerProfile;
     }
@@ -94,14 +105,16 @@ public class ProfileBuilder
     private GeneralProfile<decimal> BuildAmbientProfile()
     {
         GeneralProfile<decimal> ambientProfile = new();
-        decimal defaultValue = SimConfig.input.ambientTemp.value;
+        decimal defaultValue = SimConfig.Input.ambientTemp.value;
         
         // Create Default Profile
-        ambientProfile.TimeStamps = TimeStamps;
         for (int i = 0; i < TimeStamps.Count; i++)
         {
             ambientProfile.Values.Add(defaultValue);
         }
+        
+        // Set the unit
+        ambientProfile.Unit = SimConfig.Input.ambientTemp.unit;
 
         return ambientProfile;
     }
@@ -113,14 +126,16 @@ public class ProfileBuilder
     private GeneralProfile<decimal> BuildInputCoilProfile()
     {
         GeneralProfile<decimal> inputCoilProfile = new();
-        decimal defaultValue = SimConfig.input.coilPower.value;
+        decimal defaultValue = SimConfig.Input.coilPower.value;
         
         // Create Default Profile
-        inputCoilProfile.TimeStamps = TimeStamps;
         for (int i = 0; i < TimeStamps.Count; i++)
         {
             inputCoilProfile.Values.Add(defaultValue);
         }
+        
+        // Set the unit
+        inputCoilProfile.Unit = SimConfig.Input.coilPower.unit;
         
         return inputCoilProfile;
     }
@@ -135,17 +150,16 @@ public class ProfileBuilder
         const decimal defaultValue = (decimal)0.00;
         
         // Create Default Profile
-        flowProfile.TimeStamps = TimeStamps;
         for (int i = 0; i < TimeStamps.Count; i++)
         {
             flowProfile.Values.Add(defaultValue);
         }
         
         // Insert discharge events into the profile
-        AddEventsToFlowProfile(flowProfile, SimConfig.input.events.discharge);
+        AddEventsToFlowProfile(flowProfile, SimConfig.Input.events.discharge);
         
         // Insert charge events into the profile if available
-        AddEventsToFlowProfile(flowProfile, SimConfig.input.events.charge, false);
+        AddEventsToFlowProfile(flowProfile, SimConfig.Input.events.charge, false);
 
         return flowProfile;
     }
@@ -160,8 +174,8 @@ public class ProfileBuilder
     {
         foreach (FlowEvent eventEntry in flowEvents)
         {
-            int startIndex = flowProfile.TimeStamps.IndexOf(eventEntry.start);
-            int stopIndex = flowProfile.TimeStamps.IndexOf(eventEntry.stop);
+            int startIndex = TimeStamps.IndexOf(eventEntry.start);
+            int stopIndex = TimeStamps.IndexOf(eventEntry.stop);
             int indexRange = stopIndex - startIndex;
 
             // Set the values of the event to the provided value
@@ -179,6 +193,9 @@ public class ProfileBuilder
                         flowProfile.Values[i] = -eventEntry.flowRate.value;
                 }
             }
+            
+            // Set the unit
+            flowProfile.Unit = SimConfig.Input.events.discharge.FirstOrDefault()?.flowRate.unit;
         }
     }
     
@@ -189,7 +206,7 @@ public class ProfileBuilder
     /// <param name="stop"></param>
     /// <param name="delta"></param>
     /// <returns></returns>
-    private static List<DateTime> GenerateTimeStampProfile(DateTime start, DateTime stop, TimeSpan delta)
+    private List<DateTime> GenerateTimeStampProfile(DateTime start, DateTime stop, TimeSpan delta)
     {
         List<DateTime> dates = new();
 
