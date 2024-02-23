@@ -35,11 +35,22 @@ function simObject = EHWST_Simulation_Start(configJsonFileUrl)
         throw exception;
     end
 
+    set(groot,'defaultAxesFontName', 'Times New Roman')
+    set(groot,'defaultAxesFontSize', 11)
+    set(groot,'defaultAxesFontWeight', "bold")
+
     %% Call the simulation class
     simObject = EHWST_Simulator(configJson);
 
+    [T_mat_sim] = simObject.simulate();
+
+    plot(T_mat_sim)
+
     % Generate some geometric plots
-    simObject.generateGeometricPlots
+%     simObject.generateGeometricPlots
+
+    % Visualise the input profiles provided in the JSON
+    simObject.visualiseInputProfiles
 
     % Create animation if necessary
 %     simObject.createAnimation(directory + '\simAnimation.avi')
