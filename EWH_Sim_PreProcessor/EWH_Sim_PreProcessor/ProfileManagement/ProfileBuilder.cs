@@ -1,6 +1,9 @@
+using System.Globalization;
+using CsvHelper;
+using CsvHelper.TypeConversion;
 using EWH_Sim_PreProcessor.ConfigStructures;
 
-namespace EWH_Sim_PreProcessor;
+namespace EWH_Sim_PreProcessor.ProfileManagement;
 
 public class ProfileBuilder
 {
@@ -13,41 +16,119 @@ public class ProfileBuilder
     
     public ProfileBuilder(SimulationConfig simConfig)
     {
-        // Instantiate all appropriate variables
+        // Initialise all appropriate variables
         SimConfig = simConfig;
         SimInputProfiles = new SimInputProfiles();
-        SimStartTime = SimConfig.SimParameters.startTime;
-        SimStopTime = SimConfig.SimParameters.stopTime;
-        DeltaTime = TimeSpan.FromSeconds((double)SimConfig.SimParameters.dt);
-        
-        // Create TimeStamp Vector of simulation
-        TimeStamps = GenerateTimeStampProfile(SimStartTime, SimStopTime, DeltaTime);
-        
-        // Assign time stamp profiles
-        SimInputProfiles.Time = new GeneralProfile<DateTime>
+
+        if (simConfig.Input.source.csv == true)
         {
-            Values = TimeStamps,
-            Unit = "YYYY-MM-DDTHH:mm:ss"
-        };
-
-        // Build power availability profile
-        SimInputProfiles.PowerAvailableProfile = BuildPowerAvailabilityProfile();
+            try
+            {
+                if (simConfig.Input.source.filePath != null)
+                    ExtractProfileFromCsv(simConfig.Input.source.filePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+        else
+        {
+            SimStartTime = SimConfig.SimParameters.startTime;
+            SimStopTime = SimConfig.SimParameters.stopTime;
+            DeltaTime = TimeSpan.FromSeconds((double)SimConfig.SimParameters.dt);
         
-        // Build ambient profile
-        SimInputProfiles.AmbientTempProfile = BuildAmbientProfile();
-
-        // Build flow profile
-        SimInputProfiles.FlowProfile = BuildFlowProfile();
-
-        SimInputProfiles.inletTempProfile = BuildInletTempProfile();
+            // Create TimeStamp Vector of simulation
+            TimeStamps = GenerateTimeStampProfile(SimStartTime, SimStopTime, DeltaTime);
         
-        // Build input coil profiles
-        SimInputProfiles.CoilPowerProfile = BuildInputCoilProfile();
+            // Assign time stamp profiles
+            SimInputProfiles.Time = new GeneralProfile<DateTime>
+            {
+                Values = TimeStamps,
+                Unit = "YYYY-MM-DDTHH:mm:ss"
+            };
+
+            // Build power availability profile
+            SimInputProfiles.PowerAvailableProfile = BuildPowerAvailabilityProfile();
         
-        // Build Set temperature profile
-        SimInputProfiles.SetTempProfile = BuildSetTempProfile();
+            // Build ambient profile
+            SimInputProfiles.AmbientTempProfile = BuildAmbientProfile();
+
+            // Build flow profile
+            SimInputProfiles.FlowProfile = BuildFlowProfile();
+
+            SimInputProfiles.inletTempProfile = BuildInletTempProfile();
+        
+            // Build input coil profiles
+            SimInputProfiles.CoilPowerProfile = BuildInputCoilProfile();
+        
+            // Build Set temperature profile
+            SimInputProfiles.SetTempProfile = BuildSetTempProfile();
+        }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="csvFilePath"></param>
+    private void ExtractProfileFromCsv(string csvFilePath)
+    {
+        using StreamReader reader = new(csvFilePath);
+        using CsvReader csv = new(reader, CultureInfo.InvariantCulture);
+        csv.Context.TypeConverterOptionsCache.AddOptions<DateTime>(new TypeConverterOptions { Formats = new[] { "dd/MM/yyyy  HH:mm:ss" } });
+        List<CsvProfile> records = csv.GetRecords<CsvProfile>().ToList();
+
+        SimInputProfiles.Time = new GeneralProfile<DateTime>
+        {
+            Values = new List<DateTime>(records.Select(r => r.Time).ToArray()),
+            Unit = "YYYY-MM-DDTHH:mm:ss"
+        };
+        SimInputProfiles.CoilPowerProfile = new GeneralProfile<decimal>
+        {
+            Values = new List<decimal>(records.Select(r => r.CoilPower).ToArray()),
+            Unit = GetUnitValue("coilPower")
+        };
+        SimInputProfiles.AmbientTempProfile = new GeneralProfile<decimal>
+        {
+            Values = new List<decimal>(records.Select(r => r.AmbientTemp).ToArray()),
+            Unit = GetUnitValue("ambientTemp")
+        };
+        SimInputProfiles.SetTempProfile = new GeneralProfile<decimal>
+        {
+            Values = new List<decimal>(records.Select(r => r.TempSet).ToArray()),
+            Unit = GetUnitValue("tempSet")
+        };
+        SimInputProfiles.FlowProfile = new GeneralProfile<decimal>
+        {
+            Values = new List<decimal>(records.Select(r => r.FlowRate).ToArray()),
+            Unit = GetUnitValue("flowRate")
+        };
+        SimInputProfiles.inletTempProfile = new GeneralProfile<decimal>
+        {
+            Values = new List<decimal>(records.Select(r => r.InletTemp).ToArray()),
+            Unit = GetUnitValue("inletTemp")
+        };
+        
+        SimInputProfiles.PowerAvailableProfile = new GeneralProfile<bool>
+        {
+            Values = new List<bool>(records.Select(r => r.PowerAvailable).ToArray()),
+            Unit = GetUnitValue("powerAvailable")
+        };
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fieldName"></param>
+    /// <returns></returns>
+    private string? GetUnitValue(string fieldName)
+    {
+        return SimConfig.Input.source.units
+            .Where(u => u.name.Contains(fieldName, StringComparison.InvariantCultureIgnoreCase)).Select(u => u.value)
+            .FirstOrDefault();
+    }
+    
     /// <summary>
     /// 
     /// </summary>

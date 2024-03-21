@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "EnNCWnGUWbNs/IdVws+waxqeP52iXfSx+NYE0iWqn4KnYcC6sy6NmhfugOjDrFKrciAKxtfZmrvw6Q3avfgtTg==",
+  "dgSpecHash": "upxmctNr6CI6AN3B0/Nm6NztXPblTahUxBVpfrEbsM23WZH0DhT3WsFV025gbuY46etWzIC8vLbGvP1bvbLg0A==",
   "success": true,
   "projectFilePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\EWH_Sim_PreProcessor\\EWH_Sim_PreProcessor\\EWH_Sim_PreProcessor.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\apache.arrow\\15.0.0\\apache.arrow.15.0.0.nupkg.sha512",
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\apache.arrow.flight\\15.0.0\\apache.arrow.flight.15.0.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\csvhelper\\31.0.2\\csvhelper.31.0.2.nupkg.sha512",
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\google.protobuf\\3.25.1\\google.protobuf.3.25.1.nupkg.sha512",
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\grpc.core.api\\2.59.0\\grpc.core.api.2.59.0.nupkg.sha512",
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\grpc.net.client\\2.59.0\\grpc.net.client.2.59.0.nupkg.sha512",

@@ -47,7 +47,14 @@ classdef EHWST_Simulator
             % Populate the simulation parameters
             obj = populateSimParameters(obj);
 
-            obj.TimeVector = obj.SimStartTime:duration(0, 0, obj.Delta_t):obj.SimStopTime;
+            if(configJson.input.source.csv == true)
+                obj.TimeVector = datetime(configJson.profiles.time.values, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss');
+            else
+                obj.TimeVector = obj.SimStartTime:duration(0, 0, obj.Delta_t):obj.SimStopTime;
+            end
+
+            % Populate timesteps
+            obj.TimeSteps = length(obj.TimeVector);
 
             % Extract input profiles from config file
             try
@@ -222,7 +229,6 @@ classdef EHWST_Simulator
             
             try
                 obj.SimDuration = obj.SimStopTime - obj.SimStartTime;
-                obj.TimeSteps = ceil(seconds(obj.SimDuration)/obj.Delta_t);
             catch ex
                 fprintf('An error occurred: %s\n', ex.message);
                 throw ex;

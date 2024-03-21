@@ -25,6 +25,15 @@
           "lib/netstandard2.1/Apache.Arrow.Flight.dll": {}
         }
       },
+      "CsvHelper/31.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/CsvHelper.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/CsvHelper.dll": {}
+        }
+      },
       "Google.Protobuf/3.25.1": {
         "type": "package",
         "compile": {
@@ -139,6 +148,34 @@
         "apache.arrow.flight.nuspec",
         "lib/netstandard2.0/Apache.Arrow.Flight.dll",
         "lib/netstandard2.1/Apache.Arrow.Flight.dll"
+      ]
+    },
+    "CsvHelper/31.0.2": {
+      "sha512": "ndlIN77XcFm6qqGlNPzl0XjVupMCBVhVSiO+1+X2UhJtnnvkx9f//7FOvlkLuEQ76NC3Y7owa8IOhgtKVa4H7Q==",
+      "type": "package",
+      "path": "csvhelper/31.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "csvhelper.31.0.2.nupkg.sha512",
+        "csvhelper.nuspec",
+        "lib/net462/CsvHelper.dll",
+        "lib/net462/CsvHelper.xml",
+        "lib/net47/CsvHelper.dll",
+        "lib/net47/CsvHelper.xml",
+        "lib/net48/CsvHelper.dll",
+        "lib/net48/CsvHelper.xml",
+        "lib/net6.0/CsvHelper.dll",
+        "lib/net6.0/CsvHelper.xml",
+        "lib/net7.0/CsvHelper.dll",
+        "lib/net7.0/CsvHelper.xml",
+        "lib/net8.0/CsvHelper.dll",
+        "lib/net8.0/CsvHelper.xml",
+        "lib/netstandard2.0/CsvHelper.dll",
+        "lib/netstandard2.0/CsvHelper.xml",
+        "lib/netstandard2.1/CsvHelper.dll",
+        "lib/netstandard2.1/CsvHelper.xml"
       ]
     },
     "Google.Protobuf/3.25.1": {
@@ -371,6 +408,7 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
+      "CsvHelper >= 31.0.2",
       "InfluxDB3.Client >= 0.5.0",
       "Newtonsoft.Json >= 13.0.3",
       "Serilog >= 3.1.2-dev-02097"
@@ -415,6 +453,10 @@
       "net6.0": {
         "targetAlias": "net6.0",
         "dependencies": {
+          "CsvHelper": {
+            "target": "Package",
+            "version": "[31.0.2, )"
+          },
           "InfluxDB3.Client": {
             "target": "Package",
             "version": "[0.5.0, )"

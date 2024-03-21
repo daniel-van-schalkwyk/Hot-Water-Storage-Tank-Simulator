@@ -18,13 +18,39 @@
     "simParameters": {
         "startTime": "2024-02-05T00:00:00",
         "stopTime": "2024-02-06T00:00:00",
-        "dt": 60,
+        "dt": 5,
         "tempInit": 50
     },
     "input": {
         "source": {
-            "csv": false,
-            "filePath": ""
+            "csv": true,
+            "filePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\SimProfileFile.csv", 
+            "units": [
+                {
+                    "name": "tempSet",
+                    "value": "°C"
+                },
+                {
+                    "name": "coilPower",
+                    "value": "W"
+                },
+                {
+                    "name": "ambientTemp",
+                    "value": "°C"
+                },
+                {
+                    "name": "flowRate",
+                    "value": "L/min"
+                },
+                {
+                    "name": "inletTemp",
+                    "value": "°C"
+                },
+                {
+                    "name": "powerAvailable",
+                    "value": "Bool"
+                }
+            ]
         },
         "tempSet": {
             "unit": "°C",
