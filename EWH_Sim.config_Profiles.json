@@ -13,7 +13,7 @@
     "diameter": 0.4,
     "capacity": 0.15,
     "layerConfig": "CH",
-    "nodeNumber": 18
+    "nodeNumber": 9
   },
   "simParameters": {
     "startTime": "2024-02-05T00:00:00",

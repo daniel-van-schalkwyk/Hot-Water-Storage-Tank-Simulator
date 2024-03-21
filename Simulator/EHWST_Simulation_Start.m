@@ -1,7 +1,7 @@
 function simObject = EHWST_Simulation_Start(configJsonFileUrl)
     %EHWST_Simulation_Start The calling script for the storage simulator
     %   configJsonFileUrl - The URL of the configuration file for the simulator 
-    
+    fprintf('EHWST Simulator script called!\n');
     %% Get the file name information and valide file type
     % Check whether the provided file exists
     if(~isfile(configJsonFileUrl))
@@ -55,4 +55,5 @@ function simObject = EHWST_Simulation_Start(configJsonFileUrl)
     % Create animation if necessary
 %     simObject.createAnimation(directory + '\simAnimation.avi')
 
+fprintf('EHWST Simulator script finished!\n');
 end

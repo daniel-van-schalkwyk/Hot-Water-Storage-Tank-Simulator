@@ -1,9 +1,17 @@
 {
   "version": 2,
-  "dgSpecHash": "ZsLBMpx8FwWBORpqqQlWCKcM1n0/AvNVPq8tGeDGWdFNx8h33Nb8tsoEOiPu56KxMdX74bjL8KFqAKyLI94I+g==",
+  "dgSpecHash": "EnNCWnGUWbNs/IdVws+waxqeP52iXfSx+NYE0iWqn4KnYcC6sy6NmhfugOjDrFKrciAKxtfZmrvw6Q3avfgtTg==",
   "success": true,
   "projectFilePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\EWH_Sim_PreProcessor\\EWH_Sim_PreProcessor\\EWH_Sim_PreProcessor.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\apache.arrow\\15.0.0\\apache.arrow.15.0.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\apache.arrow.flight\\15.0.0\\apache.arrow.flight.15.0.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\google.protobuf\\3.25.1\\google.protobuf.3.25.1.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\grpc.core.api\\2.59.0\\grpc.core.api.2.59.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\grpc.net.client\\2.59.0\\grpc.net.client.2.59.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\grpc.net.common\\2.59.0\\grpc.net.common.2.59.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\influxdb3.client\\0.5.0\\influxdb3.client.0.5.0.nupkg.sha512",
+    "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\6.0.0\\microsoft.extensions.logging.abstractions.6.0.0.nupkg.sha512",
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\DanielvanSchalkwyk\\.nuget\\packages\\serilog\\3.1.2-dev-02097\\serilog.3.1.2-dev-02097.nupkg.sha512"
   ],
