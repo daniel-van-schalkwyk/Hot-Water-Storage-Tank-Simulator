@@ -11,7 +11,7 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
     %% Get all simulation parameters and inputs from provided structs
     try
         simTime_steps = simParams.simTime_steps;    % Total number of time steps required
-        delta_t_s = simParams.delta_t_s;            % The change in time in seconds
+        delta_t_s = double(simParams.delta_t_s);            % The change in time in seconds
         rho_w = simParams.rho_w;                    % An annonymous funtion for water density as a function of temp in Kelvin
         cp_w = simParams.cp_w;                      % An annonymous funtion for water specific heat capacity as a function of temp in Kelvin
         T_initial = simParams.T_initial;            % Initial layer temperatures, row vector
@@ -28,7 +28,7 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
     try
         T_inlet = inputs.T_inlet;
         T_amb = inputs.T_amb;
-        m_flowrate = inputs.m_flowrate;
+        m_flowrate = inputs.flowrate .* rho_w(T_inlet+273.15);
     catch
         error('Not all necessary parameters are provided in the "inputs" struct or field names do not match');
     end
@@ -36,17 +36,11 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
     % Assign number of nodes of model
     nodes = tankGeomModel.n;
 
-    % Calculate the exposed surface are to the ambient 
-    [A_exposed, valid] = getExposedSurfaceAreas(tankGeomModel);
-    if(~valid)
-        error('Validation for exposed surface area not satisfied')
-    end
+    % Assign Area of cross sectional layers
+    A_crossSec = tankGeomModel.A_crossSec;
 
-    % Calculate the cross-sectional areas of the layers
-    A_crossSec = getLayerCrossSectionalAreas(tankGeomModel);
-    
-    % Get layer volumes
-    layerVolumes = getNodeVolumes(tankGeomModel);
+    % Get area of exposed to the environment
+    A_exposed = tankGeomModel.A_exposed;
     
     % Simulation run
     T_vec_next = zeros(nodes, simTime_steps);
@@ -60,23 +54,22 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
         % Get current ambient temp T_amb
         T_amb_current = T_amb(time);
 
+        T_inlet_current = T_inlet(time);
+
         % Check the state of flow: charging or discharging
         if(massFlow_current >= 0)
             flowState = 'discharge';
-            T_inlet_current = T_inlet(time, 1);
             n_mix = n_mix_discharge;
         elseif(massFlow_current < 0)
             flowState = 'charge';
-            massFlow_current = massFlow_current*-1;
             T_vec_current = flip(T_vec_current, 1);
-            T_inlet_current = T_inlet(time, 2);
             n_mix = n_mix_charge;
         else
             flowState = 'stationary';
         end
 
         % Calculate the accurate layer masses and capacities for the current time iteration
-        layerMasses = rho_w(T_vec_current + 273.15) .* layerVolumes;
+        layerMasses = rho_w(T_vec_current + 273.15) .* tankGeomModel.layerVolumes;
         layerCapacities = layerMasses.*cp_w(T_vec_current + 273.15);
 
         %% Construct Matrix F

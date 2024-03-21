@@ -7,21 +7,51 @@
         "id": 1
     },
     "config": {
-        "orientation": "H", 
+        "orientation": "H",
         "tWall": 0.0015,
         "longLength": 1.19,
         "diameter": 0.4,
         "capacity": 0.15,
-        "layerConfig": "CV",
-        "nodeNumber": 49
+        "layerConfig": "CH",
+        "nodeNumber": 9
     },
     "simParameters": {
-        "startTime": "2024-02-05T12:00:00",
-        "stopTime": "2024-02-05T16:00:00",
-        "dt": 60,
-        "tempInit": 20
+        "startTime": "2024-02-05T00:00:00",
+        "stopTime": "2024-02-06T00:00:00",
+        "dt": 5,
+        "tempInit": 50
     },
     "input": {
+        "source": {
+            "csv": true,
+            "filePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\SimProfileFile.csv", 
+            "units": [
+                {
+                    "name": "tempSet",
+                    "value": "°C"
+                },
+                {
+                    "name": "coilPower",
+                    "value": "W"
+                },
+                {
+                    "name": "ambientTemp",
+                    "value": "°C"
+                },
+                {
+                    "name": "flowRate",
+                    "value": "L/min"
+                },
+                {
+                    "name": "inletTemp",
+                    "value": "°C"
+                },
+                {
+                    "name": "powerAvailable",
+                    "value": "Bool"
+                }
+            ]
+        },
         "tempSet": {
             "unit": "°C",
             "value": 60
@@ -38,32 +68,44 @@
             "discharge": [
                 {
                     "start": "2024-02-05T13:00:00",
-                    "stop": "2024-02-05T13:10:00",
+                    "stop": "2024-02-05T13:30:00",
                     "inletTemp": {
                         "unit": "°C",
-                        "value": 25
+                        "value": 15
                     },
                     "flowRate": {
-                        "unit": "m^3/s",
-                        "value": 0.2
+                        "unit": "L/min",
+                        "value": 2
                     },
                     "duration": {
                         "unit": "timesteps",
+                        "value": 30
+                    }
+                },
+                {
+                    "start": "2024-02-05T21:00:00",
+                    "stop": "2024-02-05T22:30:00",
+                    "inletTemp": {
+                        "unit": "°C",
                         "value": 10
+                    },
+                    "flowRate": {
+                        "unit": "L/min",
+                        "value": 4
                     }
                 }
             ],
             "charge": [
                 {
                     "start": "2024-02-05T14:00:00",
-                    "stop": "2024-02-05T14:20:00",
+                    "stop": "2024-02-05T14:00:00",
                     "inletTemp": {
                         "unit": "°C",
                         "value": 60
                     },
                     "flowRate": {
-                        "unit": "m^3/s",
-                        "value": 0.2
+                        "unit": "L/min",
+                        "value": 1
                     },
                     "duration": {
                         "unit": "timesteps",
@@ -79,6 +121,14 @@
                         "unit": "timesteps",
                         "value": 120
                     }
+                },
+                {
+                    "start": "2024-02-05T20:00:00",
+                    "stop": "2024-02-05T22:00:00",
+                    "duration": {
+                        "unit": "timesteps",
+                        "value": 120
+                    }
                 }
             ]
         }
@@ -86,23 +136,28 @@
     "output": {
         "stateOfCharge": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "tempTemporalProfile": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "tempSpatialProfile": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "energyUsed": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         },
         "eventsProfile": {
             "plot": true,
-            "csv": true
+            "csv": true,
+            "json": true
         }
     }
 }
