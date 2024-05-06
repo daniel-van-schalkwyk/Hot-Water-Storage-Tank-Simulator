@@ -68,6 +68,9 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
             flowState = 'stationary';
         end
 
+        if(n_mix == 0)
+            n_mix = 1;
+        end
         % Calculate the accurate layer masses and capacities for the current time iteration
         layerMasses = rho_w(T_vec_current + 273.15) .* tankGeomModel.layerVolumes;
         layerCapacities = layerMasses.*cp_w(T_vec_current + 273.15);

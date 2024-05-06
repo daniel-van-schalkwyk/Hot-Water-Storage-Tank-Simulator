@@ -80,7 +80,8 @@ classdef EHWST_Simulator
             elseif(strcmp(obj.Profiles.flowRate.unit, "m^3/s"))
                 inputs.flowrate = obj.Profiles.flowRate.values;
             else
-                throw(MException('unit for flow rate profile not recogninised'));
+%                 throw(MException('flowRate::WrongFlowRate', 'unit for flow rate profile not recogninised'));
+                error('unit for flow rate profile not recogninised');
             end
             
             nodes = obj.TankGeom.n;
@@ -91,12 +92,11 @@ classdef EHWST_Simulator
             simParams.T_initial = zeros(obj.TankGeom.n, 1) + obj.SimParams.tempInit;            
             simParams.U_amb = zeros(tankGeomModel.n, 1) + 0;
             simParams.U_layers = zeros(nodes-1, 1) + 0;
-            simParams.n_mix_charge = ceil(0.20*obj.TankGeom.n);
-            simParams.n_mix_discharge = ceil(0.15*obj.TankGeom.n);
+            simParams.n_mix_charge = 0;
+            simParams.n_mix_discharge = 0;
             simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 0;
-            inletRegionIndices = ceil(0.05*nodes);
             simParams.layerMixPortions = zeros(nodes-1, 1);
-            simParams.layerMixPortions([1:inletRegionIndices, end-inletRegionIndices:end]) = 0;
+            simParams.layerMixPortions([1:1, end-1:end]) = 0;
 
             % Call the main generic state-space function with prepared
             % inputs
