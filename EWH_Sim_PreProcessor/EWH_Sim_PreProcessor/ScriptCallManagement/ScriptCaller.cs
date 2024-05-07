@@ -22,7 +22,7 @@ public class ScriptCaller
 
         // Event handlers for output
         process.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-        process.ErrorDataReceived += (sender, e) => Console.WriteLine($"Error: {e.Data}");
+        // process.ErrorDataReceived += (sender, e) => Console.WriteLine($"Error: {e.Data}");
     }
 
     /// <summary>

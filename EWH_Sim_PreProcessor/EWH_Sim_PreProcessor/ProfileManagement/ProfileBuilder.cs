@@ -305,13 +305,12 @@ public class ProfileBuilder
             flowProfile.Unit = SimConfig.Input.events.discharge.FirstOrDefault()?.flowRate.unit;
         }
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="inletTempProfile"></param>
     /// <param name="flowEvents"></param>
-    /// <param name="discharge"></param>
     private void AddEventsToInletTempProfile(GeneralProfile<decimal> inletTempProfile, IEnumerable<FlowEvent> flowEvents)
     {
         foreach (FlowEvent eventEntry in flowEvents)
