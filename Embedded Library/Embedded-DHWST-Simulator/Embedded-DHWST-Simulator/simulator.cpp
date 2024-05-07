@@ -29,9 +29,7 @@ double ConvectionModel::cp_w(double T) {
     return 0; // Placeholder implementation
 }
 
-std::vector<std::vector<double>> ConvectionModel::StateSpaceConvectionModel(const std::vector<double>& tankGeomModel,
-                                                                            const std::vector<double>& simParams,
-                                                                            const std::vector<double>& inputs)
+std::vector<std::vector<double>> ConvectionModel::StateSpaceConvectionModel(const std::vector<double>& tank_geom_model, const std::vector<double>& simParams, const std::vector<double>& inputs)
 {
     // Extract simulation parameters and inputs
     int simTime_steps = simParams[0];
@@ -48,10 +46,10 @@ std::vector<std::vector<double>> ConvectionModel::StateSpaceConvectionModel(cons
     double m_flowrate = inputs[2];
 
     // Assign number of nodes of model
-    int nodes = tankGeomModel[3];
+    int nodes = tank_geom_model[3];
 
     // Calculate the exposed surface area to the ambient
-    std::pair<std::vector<double>, bool> exposedSurfaceAreas = getExposedSurfaceAreas(tankGeomModel);
+    std::pair<std::vector<double>, bool> exposedSurfaceAreas = getExposedSurfaceAreas(tank_geom_model);
     std::vector<double> A_exposed = exposedSurfaceAreas.first;
     bool valid = exposedSurfaceAreas.second;
     if (!valid) {
@@ -60,10 +58,10 @@ std::vector<std::vector<double>> ConvectionModel::StateSpaceConvectionModel(cons
     }
 
     // Calculate the cross-sectional areas of the layers
-    std::vector<double> A_crossSec = getLayerCrossSectionalAreas(tankGeomModel);
+    std::vector<double> A_crossSec = getLayerCrossSectionalAreas(tank_geom_model);
 
     // Get layer volumes
-    std::vector<double> layerVolumes = getNodeVolumes(tankGeomModel, "horizontal", true);
+    std::vector<double> layerVolumes = getNodeVolumes(tank_geom_model, "horizontal", true);
 
     // Simulation run
     std::vector<std::vector<double>> T_mat(simTime_steps, std::vector<double>(nodes));

@@ -55,7 +55,6 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
         elseif(massFlow_current < 0)
             flowState = 'charge';
             T_vec_current = flip(T_vec_current, 1);
-            massFlow_current = massFlow_current*-1;
             n_mix = n_mix_charge;
         else
             flowState = 'stationary';

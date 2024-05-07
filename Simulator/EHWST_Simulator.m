@@ -90,11 +90,11 @@ classdef EHWST_Simulator
             simParams.rho_w = @(T) (1.49343e-3 - 3.7164e-6*T + 7.09782e-9*T.^2 - 1.90321e-20*T.^6).^-1;                    
             simParams.cp_w = @(T) 8.15599e3 - 2.80627*10*T + 5.11283e-2*T.^2 - 2.17582e-13*T.^6;                     
             simParams.T_initial = zeros(obj.TankGeom.n, 1) + obj.SimParams.tempInit;            
-            simParams.U_amb = zeros(tankGeomModel.n, 1) + 0;
-            simParams.U_layers = zeros(nodes-1, 1) + 0;
-            simParams.n_mix_charge = 0;
-            simParams.n_mix_discharge = 0;
-            simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 0;
+            simParams.U_amb = zeros(tankGeomModel.n, 1) + 1;
+            simParams.U_layers = zeros(nodes-1, 1) + 1;
+            simParams.n_mix_charge = 1;
+            simParams.n_mix_discharge = 1;
+            simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 5;
             simParams.layerMixPortions = zeros(nodes-1, 1);
             simParams.layerMixPortions([1:1, end-1:end]) = 0;
 

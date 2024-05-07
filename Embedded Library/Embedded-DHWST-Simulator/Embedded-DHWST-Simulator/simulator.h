@@ -13,12 +13,12 @@ class ConvectionModel
     /**
      * \brief
      * The main model that is called to calculate the temperature profiles inside of the tank
-     * \param tankGeomModel dd
+     * \param tank_geom_model dd
      * \param simParams ss
      * \param inputs ss
      * \return ss
      */
-    static std::vector<std::vector<double>> StateSpaceConvectionModel(const std::vector<double>& tankGeomModel,
+    static std::vector<std::vector<double>> StateSpaceConvectionModel(const std::vector<double>& tank_geom_model,
                                                                       const std::vector<double>& simParams,
                                                                       const std::vector<double>& inputs);
     private:

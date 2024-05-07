@@ -14,14 +14,12 @@
         "outputPath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\EWH_Sim_PreProcessor\\EWH_Sim_PreProcessor\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\DanielvanSchalkwyk\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\DanielvanSchalkwyk\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
