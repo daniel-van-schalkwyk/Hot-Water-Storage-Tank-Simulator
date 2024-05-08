@@ -66,7 +66,7 @@ classdef EHWST_Simulator
         end
 
         %% Call Generic State-Space Model
-        function [T_mat_sim, dTdt_mat] = simulate(obj)
+        function [T_mat_sim, dTdt_mat, coilStates] = simulate(obj)
 
             % Prepare arguments for model
             tankGeomModel = obj.TankGeom;
@@ -90,17 +90,31 @@ classdef EHWST_Simulator
             simParams.rho_w = @(T) (1.49343e-3 - 3.7164e-6*T + 7.09782e-9*T.^2 - 1.90321e-20*T.^6).^-1;                    
             simParams.cp_w = @(T) 8.15599e3 - 2.80627*10*T + 5.11283e-2*T.^2 - 2.17582e-13*T.^6;                     
             simParams.T_initial = zeros(obj.TankGeom.n, 1) + obj.SimParams.tempInit;            
-            simParams.U_amb = zeros(tankGeomModel.n, 1) + 1;
-            simParams.U_layers = zeros(nodes-1, 1) + 1;
+            simParams.U_amb = zeros(tankGeomModel.n, 1) + 2;
+            simParams.U_layers = zeros(nodes-1, 1) + 5;
             simParams.n_mix_charge = 1;
             simParams.n_mix_discharge = 1;
-            simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 5;
+            simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 10;
             simParams.layerMixPortions = zeros(nodes-1, 1);
             simParams.layerMixPortions([1:1, end-1:end]) = 0;
+            simParams.eHeatingPower = obj.ConfigJson.input.coilPower.value;
+            simParams.gCoeffs = [
+                                            0.073178074
+                                            0.123146458
+                                            0.150144593
+                                            0.161594474
+                                            0.161867056
+                                            0.145951432
+                                            0.108614193
+                                            0
+                                            0
+                                                ];
+            simParams.h_ThermostatNorm = 0.43;
+            simParams.setTemp = 50;
 
             % Call the main generic state-space function with prepared
             % inputs
-            [T_mat_sim, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simParams, inputs);
+            [T_mat_sim, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeomModel, simParams, inputs);
         end
 
         %% Some Geometric figures

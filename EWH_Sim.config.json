@@ -2,7 +2,7 @@
     "general": {
         "simName": "sim_test",
         "username": "Daniel",
-        "date": "2024-02-01T12:00:00",
+        "date": "2024-05-01T12:00:00",
         "saveData": false,
         "id": 1
     },
@@ -13,12 +13,12 @@
         "diameter": 0.4,
         "capacity": 0.15,
         "layerConfig": "CH",
-        "nodeNumber": 25
+        "nodeNumber": 9
     },
     "simParameters": {
-        "startTime": "2024-02-05T00:00:00",
-        "stopTime": "2024-02-05T10:00:00",
-        "dt": 1,
+        "startTime": "2024-05-05T00:00:00",
+        "stopTime": "2024-05-06T00:00:00",
+        "dt": 5,
         "tempInit": 20
     },
     "input": {
@@ -68,54 +68,54 @@
             "discharge": [
                 {
                     "start": "2024-02-05T00:00:00",
-                    "stop": "2024-02-05T00:30:00",
+                    "stop": "2024-02-05T00:01:00",
                     "inletTemp": {
                         "unit": "°C",
                         "value": 15
                     },
                     "flowRate": {
                         "unit": "L/min",
-                        "value": 5
+                        "value": 1
                     },
                     "duration": {
                         "unit": "timeSteps",
                         "value": 30
                     }
                 },
-                {
-                    "start": "2024-02-05T05:00:00",
-                    "stop": "2024-02-05T06:30:00",
-                    "inletTemp": {
-                        "unit": "°C",
-                        "value": 15
-                    },
-                    "flowRate": {
-                        "unit": "L/min",
-                        "value": 2
-                    },
-                    "duration": {
-                        "unit": "timeSteps",
-                        "value": 30
-                    }
-                }
+//                {
+//                    "start": "2024-02-05T05:00:00",
+//                    "stop": "2024-02-05T06:30:00",
+//                    "inletTemp": {
+//                        "unit": "°C",
+//                        "value": 15
+//                    },
+//                    "flowRate": {
+//                        "unit": "L/min",
+//                        "value": 2
+//                    },
+//                    "duration": {
+//                        "unit": "timeSteps",
+//                        "value": 30
+//                    }
+//                }
             ],
             "charge": [
-                {
-                    "start": "2024-02-05T02:00:00",
-                    "stop": "2024-02-05T04:00:00",
-                    "inletTemp": {
-                        "unit": "°C",
-                        "value": 50
-                    },
-                    "flowRate": {
-                        "unit": "L/min",
-                        "value": 2
-                    },
-                    "duration": {
-                        "unit": "timesteps",
-                        "value": 20
-                    }
-                }
+//                {
+//                    "start": "2024-02-05T02:00:00",
+//                    "stop": "2024-02-05T04:00:00",
+//                    "inletTemp": {
+//                        "unit": "°C",
+//                        "value": 50
+//                    },
+//                    "flowRate": {
+//                        "unit": "L/min",
+//                        "value": 2
+//                    },
+//                    "duration": {
+//                        "unit": "timesteps",
+//                        "value": 20
+//                    }
+//                }
             ],
             "powerOff": [
                 {

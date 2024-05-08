@@ -1,4 +1,4 @@
-function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simParams, inputs)
+function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeomModel, simParams, inputs)
     %% Description:
     % This method envelopes the state space convection model and 
     % performs a complex sate space calculation using different heat transfer 
@@ -19,6 +19,10 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
     layerMixPortions = simParams.layerMixPortions;  % The fractions of layer mass transfer/mixing during operation
     n_mix_charge = simParams.n_mix_charge;
     n_mix_discharge = simParams.n_mix_discharge;
+    Q_coil = simParams.eHeatingPower;
+    g_coil = simParams.gCoeffs;
+    h_ThermostatNorm = simParams.h_ThermostatNorm;
+    setTemp = simParams.setTemp;
 
     % Get all input data from argument struct
     T_inlet = inputs.T_inlet;
@@ -38,6 +42,8 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
     T_vec_next = zeros(nodes, simTime_steps);
     T_vec_current = T_initial;
     dTdt_mat = zeros(nodes, simTime_steps);
+    coilStates = zeros(simTime_steps);
+    prevCoilState = 0;
     for time = 1:1:simTime_steps
     
         % Get the current mass flow rate 
@@ -46,7 +52,12 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
         % Get current ambient temp T_amb
         T_amb_current = T_amb(time);
 
+        % Get the current inlet temperature
         T_inlet_current = T_inlet(time);
+
+        % Get the current thermostat temp
+        ThermostatPosIndex = ceil(h_ThermostatNorm*length(T_vec_current));
+        thermostatTemp = mean([T_vec_current(ThermostatPosIndex), T_vec_current(ThermostatPosIndex+1)]);
 
         % Check the state of flow: charging or discharging
         if(massFlow_current >= 0)
@@ -64,6 +75,7 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
         if(n_mix == 0)
             n_mix = 1;
         end
+        
         % Calculate the accurate layer masses and capacities for the current time iteration
         layerMasses = rho_w(T_vec_current + 273.15) .* tankGeomModel.layerVolumes;
         layerCapacities = layerMasses.*cp_w(T_vec_current + 273.15);
@@ -95,7 +107,10 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
         end
         
         %% Construct input vector 
-        u_input = [massFlow_current; massFlow_current*T_inlet_current; T_amb_current];
+        coilState = Thermostat(thermostatTemp, setTemp, 3, prevCoilState);
+        coilStates(time) = coilState;
+        prevCoilState = coilState;
+        u_input = [massFlow_current; massFlow_current*T_inlet_current; T_amb_current; coilState*Q_coil];
 
         %% Construct the G matrix
         % Construct the column vector for layer advection
@@ -124,8 +139,11 @@ function [T_mat, dTdt_mat] = StateSpaceConvectionMixingModel(tankGeomModel, simP
         % Construct the column vector for ambient coefficients
         ambCoeffs = U_amb.*A_exposed./layerCapacities;
 
+        % Construct the column vector for coil input
+        g_coeffs = g_coil./layerCapacities;
+
         % Construct the final G matrix
-        G_mat = [layerTransportCoeffs, inletTransportCoeffs, ambCoeffs];
+        G_mat = [layerTransportCoeffs, inletTransportCoeffs, ambCoeffs, g_coeffs];
     
         %% Calculate the change of temperature over time
         dTdt = F_mat*T_vec_current + G_mat*u_input;

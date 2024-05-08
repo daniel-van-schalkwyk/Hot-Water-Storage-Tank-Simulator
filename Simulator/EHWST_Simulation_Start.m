@@ -42,9 +42,13 @@ function simObject = EHWST_Simulation_Start(configJsonFileUrl)
     %% Call the simulation class
     simObject = EHWST_Simulator(configJson);
 
-    [T_mat_sim] = simObject.simulate();
+    [T_mat_sim, ~, coilStates] = simObject.simulate();
 
+    figure()
     plot(T_mat_sim)
+
+    figure()
+    plot(coilStates)
 
     % Generate some geometric plots
 %     simObject.generateGeometricPlots

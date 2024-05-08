@@ -45,7 +45,7 @@ Thread matlabThread = new(() =>
 matlabThread.Start();
 
 // Do other work in the main thread if needed
-Console.WriteLine("Main thread is doing some other work...");
+Console.WriteLine("Main thread...");
 
 // Wait for the MATLAB thread to finish (optional)
 matlabThread.Join();
