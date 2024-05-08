@@ -89,7 +89,15 @@ public class MqttManager
     {
         // Subscribe to a topic
         await Client.SubscribeAsync(topic);
+        Console.WriteLine($"Subscribed to topic: {topic}");
+    }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public Task AssignCallBackMethod()
+    {
         // Callback function when a message is received
         if (Client != null)
         {
@@ -100,6 +108,7 @@ public class MqttManager
                 return Task.CompletedTask;
             };
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>
