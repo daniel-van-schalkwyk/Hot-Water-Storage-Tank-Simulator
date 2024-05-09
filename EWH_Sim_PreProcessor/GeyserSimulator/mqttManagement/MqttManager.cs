@@ -131,6 +131,10 @@ public class MqttManager
     private void IncomingMessageHandler(MqttApplicationMessageReceivedEventArgs e)
     {
         Console.WriteLine($"Received message: {Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment)}");
+        if (e.ApplicationMessage.Topic.Equals("GeyserIn/Set"))
+        {
+            
+        }
     }
 
     /// <summary>

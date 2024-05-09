@@ -1,0 +1,113 @@
+{
+    "geyser": {
+        "orientation": "H",
+        "tWall": 0.0015,
+        "longLength": 1.19,
+        "diameter": 0.4,
+        "capacity": 0.15, 
+        "h_thermistor_rel": 0.44,
+        "coilPower": 2850,
+        "setTemp": 60,
+        "hysteresisBand": 3
+    },
+    "modelParameters": {
+        "layerConfig": "CH",
+        "n_mix_discharge": 1,
+        "n_mix_charge": 1,
+        "dt": 5,
+        "nodeNumber": 9,
+        "tempInit": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20
+        ],
+        "U_layers": [
+            0.0100,
+            0.0195,
+            0.0228,
+            0.0176,
+            0.0227,
+            0.0294,
+            0.0254,
+            0.0183
+        ],
+        "U_Ambient": [
+            0.5,
+            1.45,
+            1.9,
+            2.15,
+            2.2,
+            2.15,
+            1.8,
+            1.35,
+            0.4
+        ], 
+        "g_coeffs": [
+            0.0755577075490031,	
+            0.125523716799780,	
+            0.155378625958230,	
+            0.172040525800551,	
+            0.171072810852033,	
+            0.154187934806402,	
+            0.104595880162199,	
+            0,
+            0
+        ]
+    },
+    "input": {
+        "source": {
+            "csv": false,
+            "filePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\SimProfileFile.csv", 
+        },
+        "ambientTemp": {
+            "unit": "°C",
+            "value": 20
+        },
+        "events": {
+            "discharge": [
+                {
+                    "start": "00:00:00",
+                    "stop": "00:30:00",
+                    "inletTemp": {
+                        "unit": "°C",
+                        "value": 15
+                    },
+                    "flowRate": {
+                        "unit": "L/min",
+                        "value": 1
+                    },
+                    "duration": {
+                        "unit": "timeSteps",
+                        "value": 30
+                    }
+                },
+               {
+                   "start": "05:00:00",
+                   "stop": "06:30:00",
+                   "inletTemp": {
+                       "unit": "°C",
+                       "value": 15
+                   },
+                   "flowRate": {
+                       "unit": "L/min",
+                       "value": 2
+                   },
+                   "duration": {
+                       "unit": "timeSteps",
+                       "value": 30
+                   }
+               }
+            ],
+            "charge": [
+            ],
+            "powerOff": [
+            ]
+        }
+    }
+}

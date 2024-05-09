@@ -10,7 +10,7 @@ function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeo
     % inputs - T_in, T_amb, m_flowrate
     %% Get all simulation parameters and inputs from provided structs
     simTime_steps = simParams.simTime_steps;    % Total number of time steps required
-    delta_t_s = double(simParams.delta_t_s);            % The change in time in seconds
+    delta_t_s = double(simParams.delta_t_s);    % The change in time in seconds
     rho_w = simParams.rho_w;                    % An annonymous funtion for water density as a function of temp in Kelvin
     cp_w = simParams.cp_w;                      % An annonymous funtion for water specific heat capacity as a function of temp in Kelvin
     T_initial = simParams.T_initial;            % Initial layer temperatures, row vector
@@ -75,7 +75,7 @@ function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeo
         if(n_mix == 0)
             n_mix = 1;
         end
-        
+
         % Calculate the accurate layer masses and capacities for the current time iteration
         layerMasses = rho_w(T_vec_current + 273.15) .* tankGeomModel.layerVolumes;
         layerCapacities = layerMasses.*cp_w(T_vec_current + 273.15);
