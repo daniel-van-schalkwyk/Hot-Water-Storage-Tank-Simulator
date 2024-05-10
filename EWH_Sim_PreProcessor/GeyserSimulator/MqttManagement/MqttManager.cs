@@ -8,7 +8,6 @@ using MQTTnet.Protocol;
 
 public class MqttManager
 {
-    public List<string> Topics { get; set; }
     public IMqttClient? Client { get; set; }
     
     private readonly string _broker;
@@ -32,7 +31,6 @@ public class MqttManager
         _username = username;
         _password = password;
         _certPath = certificatePath;
-        Topics = new List<string>();
     }
     
     /// <summary>
@@ -56,21 +54,7 @@ public class MqttManager
             .WithCredentials(_username, _password) // Set username and password
             .WithClientId(clientId)
             .WithCleanStart()
-            .WithTls(
-                o =>
-                {
-                    // The used public broker sometimes has invalid certificates. This sample accepts all
-                    // certificates. This should not be used in live environments.
-                    o.CertificateValidationHandler = _ => true;
-                
-                    // The default value is determined by the OS. Set manually to force version.
-                    o.SslProtocol = SslProtocols.Tls12; 
-                
-                    // Certificate
-                    X509Certificate certificate = new(_certPath, "");
-                    o.Certificates = new List<X509Certificate> { certificate };
-                }
-            )
+            .WithTlsOptions(new MqttClientTlsOptions{UseTls = true})
             .Build();
 
         // Connect to MQTT broker
@@ -96,7 +80,7 @@ public class MqttManager
     /// 
     /// </summary>
     /// <returns></returns>
-    public Task AssignCallBackMethod()
+    public Task AssignCallBackMethod(Func<MqttApplicationMessageReceivedEventArgs, Task> callback)
     {
         // Callback function when a message is received
         if (Client != null)
@@ -104,7 +88,7 @@ public class MqttManager
             Client.ApplicationMessageReceivedAsync += e =>
             {
                 // Interpret messages
-                IncomingMessageHandler(e);
+                callback(e);
                 return Task.CompletedTask;
             };
         }
@@ -126,15 +110,6 @@ public class MqttManager
             .Build();
 
         if (Client != null) await Client.PublishAsync(message);
-    }
-    
-    private void IncomingMessageHandler(MqttApplicationMessageReceivedEventArgs e)
-    {
-        Console.WriteLine($"Received message: {Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment)}");
-        if (e.ApplicationMessage.Topic.Equals("GeyserIn/Set"))
-        {
-            
-        }
     }
 
     /// <summary>
