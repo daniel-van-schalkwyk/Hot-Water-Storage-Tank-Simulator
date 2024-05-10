@@ -63,7 +63,7 @@
     "input": {
         "source": {
             "csv": false,
-            "filePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\SimProfileFile.csv", 
+            "filePath": "C:\\Users\\DanielvanSchalkwyk\\OneDrive - Stellenbosch University\\PhD\\EWH simulator\\SimProfileFile.csv"
         },
         "ambientTemp": {
             "unit": "°C",

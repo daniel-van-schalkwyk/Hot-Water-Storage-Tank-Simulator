@@ -10,6 +10,33 @@ IniFileParser.IniFileParser fileParser = new();
 IniData? iniData = fileParser.ReadFile(@"C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EWH_Sim_PreProcessor\GeyserSimulator\Settings\Settings.ini");
 SectionDataCollection? settings = iniData.Sections;
 
+string brokerUrl = settings["ConnectionDetails"]["brokerUrl"].Trim('"');
+int port = int.Parse(settings["ConnectionDetails"]["port"]);
+string username = settings["ConnectionDetails"]["username"].Trim('"');
+string password = settings["ConnectionDetails"]["password"].Trim('"');
+string certPath = settings["ConnectionDetails"]["certPath"].Trim('"');
+
+// Get Topics``
+string setTopic = settings["TopicsSub"]["geyserSet"].Trim('"');
+string dataOutTopic = settings["TopicsPub"]["geyserData"].Trim('"');
+string eventOutTopic = settings["TopicsPub"]["geyserEvent"].Trim('"');
+string infoOutTopic = settings["TopicsPub"]["geyserInfo"].Trim('"');
+
+// Initialise MQTT connection parameters
+MqttManager mqttManager = new(brokerUrl, port, username, password, certPath);
+
+// Connect to broker
+await mqttManager.Connect();
+
+// Assign Callback method for received messages
+await mqttManager.AssignCallBackMethod();
+
+// Subscribe to topics
+await mqttManager.Subscribe(setTopic);
+
+// Publish the start of the manager
+await mqttManager.Publish(infoOutTopic, new InfoMessage{Description = "Geyser Simulation Manager started.", Type = "INFO"}.Serialize());
+
 // Initialise fileWorker
 FileWorker fileWorker = new();
 
@@ -41,24 +68,6 @@ SimulationConfig configJson = JsonConvert.DeserializeObject<SimulationConfig>(fi
 // matlabThread.Join();
 
 Console.WriteLine("Main thread finished.");
-
-string brokerUrl = settings["ConnectionDetails"]["brokerUrl"].Trim('"');;
-int port = int.Parse(settings["ConnectionDetails"]["port"]);
-string username = settings["ConnectionDetails"]["username"].Trim('"');;
-string password = settings["ConnectionDetails"]["password"].Trim('"');;
-string certPath = settings["ConnectionDetails"]["certPath"].Trim('"');
-
-// Initialise MQTT connection parameters
-MqttManager mqttManager = new(brokerUrl, port, username, password, certPath);
-
-// Connect to broker
-await mqttManager.Connect();
-
-// Assign Callback method for received messages
-await mqttManager.AssignCallBackMethod();
-
-// Subscribe to topics
-await mqttManager.Subscribe(settings["MqttTopics"]["GeyserSet"].Trim('"'));
 
 Console.WriteLine("Listening...");
 while (true)
