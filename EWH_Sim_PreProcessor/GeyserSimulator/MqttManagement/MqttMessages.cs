@@ -1,12 +1,13 @@
+using InfluxDB.Client.Core;
+
 namespace GeyserSimulator.mqttManagement;
 
 [Serializable]
 public class MqttMessages
 {
-    public string? Type { get; set; }
-    public string? Uid { get; set; }
-    public DateTime Timestamp { get; set; }
-    
+    [Column("type", IsTag = true)] public string? Type { get; set; }
+    [Column("uid", IsMeasurement = true)] public string? Uid { get; set; }
+    [Column(IsTimestamp = true)] public DateTime Timestamp { get; set; }
     public MqttMessages()
     {
         Timestamp = DateTime.Now.ToLocalTime();
@@ -35,13 +36,18 @@ class InfoMessage : MqttMessages
 [Serializable]
 class DataMessage : MqttMessages
 {
+    [Column]
     public decimal ThermostatTemp { get; set; }
+    [Column]
     public decimal InternalEnergy { get; set; }
+    [Column]
     public decimal CoilPower { get; set; }
+    [Column]
     public decimal AmbientTemp { get; set; }
+    [Column]
     public decimal SOC { get; set; }
+    [Column]
     public List<decimal>? TempProfile { get; set; }
-
 }
 
 [Serializable]

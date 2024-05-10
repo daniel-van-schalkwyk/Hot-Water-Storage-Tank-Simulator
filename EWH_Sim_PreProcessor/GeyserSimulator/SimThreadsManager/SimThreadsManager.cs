@@ -1,10 +1,7 @@
 using System.Text;
-using EWH_Sim_PreProcessor.ScriptCallManagement;
 using GeyserSimulator.mqttManagement;
 using IniFileParser.Model;
-using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet.Protocol;
 
 namespace GeyserSimulator.SimThreadsManager;
 
