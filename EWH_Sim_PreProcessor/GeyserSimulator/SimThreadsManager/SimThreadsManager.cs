@@ -2,7 +2,9 @@ using System.Text;
 using EWH_Sim_PreProcessor.ScriptCallManagement;
 using GeyserSimulator.mqttManagement;
 using IniFileParser.Model;
+using MQTTnet;
 using MQTTnet.Client;
+using MQTTnet.Protocol;
 
 namespace GeyserSimulator.SimThreadsManager;
 
@@ -51,7 +53,11 @@ public class SimThreadsManager
         }
 
         AllGeyserStates = new Dictionary<string, GeyserStates>();
-        // Connect to Master broker
+    }
+
+    public void Start()
+    {
+        // Connect to Master broker and listen
         ConnectMasterBroker();
     }
 
@@ -76,25 +82,48 @@ public class SimThreadsManager
         await _masterConnection.Publish(_masterOutInfoTopic, new InfoMessage{Description = "Geyser Simulation Manager started.", Type = "INFO"}.Serialize());
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     private async Task<IMqttClient?> ConnectToUserBroker(AddUserMessage message)
     {
-        try
+        if (message.Uid == null) throw new InvalidOperationException("No UID was provided in message");
+        
+        // Add new geyser state
+        AllGeyserStates.TryAdd(message.Uid, new GeyserStates());
+
+        // Attempt to connect to new MQTT broker URL
+        MqttManager mqttInstance = new(message.Credentials.BrokerUrl, message.Credentials.Port, message.Credentials.Username, message.Credentials.Password);
+        await mqttInstance.Connect();
+        await mqttInstance.AssignCallBackMethod(IncomingUserMessageHandler);
+        await mqttInstance.Publish(_settings.Sections["TopicsPub"]["geyserInfo"],
+            new InfoMessage
+            {
+                Description = $"Geyser simulator connected to {message.Name}'s broker", Uid = message.Uid,
+                Type = "INFO"
+            }.Serialize());
+        
+        // Subscribe to all topics from settings
+        foreach (KeyData? subscribingTopic in _settings.Sections["TopicsSub"])
         {
-            AllGeyserStates.TryAdd(message.Uid, new GeyserStates());
-                    
-            // Attempt to connect to new MQTT broker URL
-            MqttManager mqttInstance = new(message.Credentials.BrokerUrl, message.Credentials.Port, message.Credentials.Username, message.Credentials.Password);
-            await mqttInstance.Connect();
-            
-            return mqttInstance.Client;
+            await mqttInstance.Subscribe(subscribingTopic.Value);
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        
+        // Return client
+        return mqttInstance.Client;
     }
-    
+
+    private static async Task<Task> IncomingUserMessageHandler(MqttApplicationMessageReceivedEventArgs arg)
+    {
+        // Handle User incoming message
+        Console.WriteLine($"Received message: {Encoding.UTF8.GetString(arg.ApplicationMessage.PayloadSegment)}");
+        
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// Handler function for the Master Broker incoming messages
     /// </summary>
@@ -113,20 +142,33 @@ public class SimThreadsManager
                 {
                     GeyserStates geyserState = new();
 
-                    // Connect to user broker
-                    IMqttClient? userClient = await ConnectToUserBroker(message);
-                    
-                    // Call the script in a separate thread
-                    Thread geyserSimThread = new(() =>
+                    try
                     {
-                        if (userClient != null)
+                        // Connect to user broker
+                        IMqttClient? userClient = await ConnectToUserBroker(message);
+                        // Call the script in a separate thread
+                        Thread geyserSimThread = new(() =>
                         {
+                            if (userClient == null) return;
                             GeyserInstance geyserSimInstance = new(message.Uid, ref geyserState, userClient, _settings);
-                        }
-                    });
+                            geyserSimInstance.Start();
+                            
+                            while (true)
+                            {
+                                    Console.WriteLine($"Hi, thread [{message.Uid}] still alive {DateTime.Now}");
+                                    Thread.Sleep(2000);
+                            }
+                        });
                     
-                    // Start the MATLAB thread
-                    geyserSimThread.Start();
+                        // Start the MATLAB thread
+                        geyserSimThread.Start();
+                        geyserSimThread.Join();
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(exception);
+                        return Task.CompletedTask;
+                    }
                 }
             }
             catch (Exception exception)
@@ -137,10 +179,6 @@ public class SimThreadsManager
         else if(e.ApplicationMessage.Topic.Equals(_masterInSetTopic))
         {
             
-        }
-        else
-        {
-            Console.WriteLine($"Topic message: {e.ApplicationMessage.Topic}");
         }
         return Task.CompletedTask;
     }

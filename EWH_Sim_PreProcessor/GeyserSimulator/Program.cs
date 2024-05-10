@@ -22,36 +22,7 @@ MqttManager mqttManager = new(brokerUrl, port, username, password, certPath);
 
 // Create threads manager
 SimThreadsManager threadsManager = new(mqttManager, settingsData);
-
-// Initialise fileWorker
-FileWorker fileWorker = new();
-
-// Set JSON Serialization settings
-JsonSerializerSettings serialisationSettings = new()
-{
-    FloatParseHandling = FloatParseHandling.Decimal,
-    Formatting = Formatting.Indented
-};
-
-// Deserialise config file into Configuration object
-SimulationConfig configJson = JsonConvert.DeserializeObject<SimulationConfig>(fileWorker.ReadAllText(settings["FilePaths"]["configFilePath"].Trim('"')), serialisationSettings) 
-                              ?? throw new Exception("Could not deserialise the configuration file");
-
-// // Call the script in a separate thread
-// Thread matlabThread = new(() =>
-// {
-//     ScriptCaller scriptCaller = new(settings["FilePaths"]["exeSimPath"].Trim('"'), "Add arguments here");
-//     scriptCaller.CallScript();
-// });
-//
-// // Start the MATLAB thread
-// matlabThread.Start();
-//
-// // Do other work in the main thread if needed
-// Console.WriteLine("Main thread...");
-//
-// // Wait for the MATLAB thread to finish (optional)
-// matlabThread.Join();
+threadsManager.Start();
 
 Console.WriteLine("Main thread finished.");
 

@@ -73,7 +73,6 @@ public class MqttManager
     {
         // Subscribe to a topic
         await Client.SubscribeAsync(topic);
-        Console.WriteLine($"Subscribed to topic: {topic}");
     }
 
     /// <summary>
