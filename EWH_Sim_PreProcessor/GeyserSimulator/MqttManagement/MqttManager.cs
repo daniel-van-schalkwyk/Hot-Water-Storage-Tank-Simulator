@@ -14,7 +14,7 @@ public class MqttManager
     private readonly int _port;
     private readonly string _username;
     private readonly string _password;
-    private readonly string _certPath;
+    private readonly string? _certPath;
     
     /// <summary>
     /// 
@@ -31,6 +31,14 @@ public class MqttManager
         _username = username;
         _password = password;
         _certPath = certificatePath;
+    }
+
+    public MqttManager(BrokerCredentials credentials)
+    {
+        _broker = credentials.BrokerUrl;
+        _port = credentials.Port;
+        _username = credentials.Username;
+        _password = credentials.Password;
     }
     
     /// <summary>

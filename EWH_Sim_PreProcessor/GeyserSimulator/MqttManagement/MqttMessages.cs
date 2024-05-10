@@ -5,8 +5,8 @@ namespace GeyserSimulator.mqttManagement;
 [Serializable]
 public class MqttMessages
 {
-    [Column("type", IsTag = true)] public string? Type { get; set; }
-    [Column("uid", IsMeasurement = true)] public string? Uid { get; set; }
+    [Column(IsTag = true)] public string? Type { get; set; }
+    [Column(IsMeasurement = true)] public string? Uid { get; set; }
     [Column(IsTimestamp = true)] public DateTime Timestamp { get; set; }
     public MqttMessages()
     {
@@ -22,19 +22,19 @@ class SetMessage : MqttMessages
 }
 
 [Serializable]
-class EventMessage : MqttMessages
+public class EventMessage : MqttMessages
 {
     public string? State { get; set; }
 }
 
 [Serializable]
-class InfoMessage : MqttMessages
+public class InfoMessage : MqttMessages
 {
     public string? Description { get; set; }
 }
 
 [Serializable]
-class DataMessage : MqttMessages
+public class DataMessage : MqttMessages
 {
     [Column]
     public decimal ThermostatTemp { get; set; }
@@ -51,17 +51,31 @@ class DataMessage : MqttMessages
 }
 
 [Serializable]
-class AddUserMessage : MqttMessages
+public class AddUserMessage : MqttMessages
 {
-    public string? Name { get; set; }
-    public BrokerCredentials? Credentials { get; set; }
+    public string Name { get; set; }
+    public BrokerCredentials Credentials { get; set; }
+    
+    public AddUserMessage(string name, BrokerCredentials credentials)
+    {
+        Name = name;
+        Credentials = credentials;
+    }
 }
 
 [Serializable]
-class BrokerCredentials
+public class BrokerCredentials
 {
-    public string? BrokerUrl { get; set; }
+    public string BrokerUrl { get; set; }
     public int Port { get; set; }
-    public string? Username { get; set; }
-    public string? Password { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    
+    public BrokerCredentials(string brokerUrl, int port, string username, string password)
+    {
+        BrokerUrl = brokerUrl;
+        Port = port;
+        Username = username;
+        Password = password;
+    }
 }

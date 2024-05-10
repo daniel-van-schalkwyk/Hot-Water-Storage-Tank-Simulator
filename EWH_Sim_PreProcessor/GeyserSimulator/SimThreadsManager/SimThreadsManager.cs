@@ -1,7 +1,10 @@
 using System.Text;
+using System.Timers;
+using GeyserSimulator.DbManagement;
 using GeyserSimulator.mqttManagement;
 using IniFileParser.Model;
 using MQTTnet.Client;
+using Timer = System.Timers.Timer;
 
 namespace GeyserSimulator.SimThreadsManager;
 
@@ -9,7 +12,9 @@ public class SimThreadsManager
 {
     public Dictionary<string, GeyserStates> AllGeyserStates { get; set; }
 
-    private readonly MqttManager _masterConnection;
+    private IList<Thread> _threadPool;
+    private readonly MqttManager _masterBrokerManager;
+    private readonly InfluxDbManager _dbManager;
     private readonly IniData _settings;
     private readonly string _masterInAddTopic;
     private readonly string _masterInGetTopic;
@@ -18,9 +23,10 @@ public class SimThreadsManager
     private readonly string _masterOutDataTopic;
     private readonly string _masterOutEventTopic;
 
-    public SimThreadsManager(MqttManager masterConnection, IniData settings)
+    public SimThreadsManager(MqttManager masterBrokerManager, InfluxDbManager dbManager, IniData settings)
     {
-        _masterConnection = masterConnection;
+        _masterBrokerManager = masterBrokerManager;
+        _dbManager = dbManager;
         _settings = settings;
         
         // Get Subscribe Topics
@@ -50,6 +56,7 @@ public class SimThreadsManager
         }
 
         AllGeyserStates = new Dictionary<string, GeyserStates>();
+        _threadPool = new List<Thread>();
     }
 
     public void Start()
@@ -64,19 +71,19 @@ public class SimThreadsManager
     private async void ConnectMasterBroker()
     {
         // Connect to broker
-        await _masterConnection.Connect();
+        await _masterBrokerManager.Connect();
 
         // Assign Callback method for received messages
-        await _masterConnection.AssignCallBackMethod(IncomingMessageHandler);
+        await _masterBrokerManager.AssignCallBackMethod(IncomingMessageHandler);
 
         // Subscribe to all topics from settings
         foreach (KeyData? subscribingTopic in _settings.Sections["TopicsMasterSub"])
         {
-            await _masterConnection.Subscribe(subscribingTopic.Value);
+            await _masterBrokerManager.Subscribe(subscribingTopic.Value);
         }
         
         // Publish the start of the manager
-        await _masterConnection.Publish(_masterOutInfoTopic, new InfoMessage{Description = "Geyser Simulation Manager started.", Type = "INFO"}.Serialize());
+        await _masterBrokerManager.Publish(_masterOutInfoTopic, new InfoMessage{Description = "Geyser Simulation Manager started.", Type = "INFO"}.Serialize());
     }
 
     /// <summary>
@@ -137,29 +144,32 @@ public class SimThreadsManager
                 AddUserMessage? message = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<AddUserMessage>();
                 if (message?.Uid != null)
                 {
+                    // Create new geyser state
                     GeyserStates geyserState = new();
-
+                    
                     try
                     {
                         // Connect to user broker
                         IMqttClient? userClient = await ConnectToUserBroker(message);
+                        
                         // Call the script in a separate thread
                         Thread geyserSimThread = new(() =>
                         {
                             if (userClient == null) return;
                             GeyserInstance geyserSimInstance = new(message.Uid, ref geyserState, userClient, _settings);
-                            geyserSimInstance.Start();
+                            geyserSimInstance.StartSim();
+                        })
+                        {
                             
-                            while (true)
-                            {
-                                    Console.WriteLine($"Hi, thread [{message.Uid}] still alive {DateTime.Now}");
-                                    Thread.Sleep(2000);
-                            }
-                        });
-                    
-                        // Start the MATLAB thread
+                            Name = $"{message.Uid}",
+                            IsBackground = true
+                        };
+
+                        // Add thread to pool so that it can be managed
+                        _threadPool.Add(geyserSimThread);
+                        
+                        // Start the simulation thread
                         geyserSimThread.Start();
-                        geyserSimThread.Join();
                     }
                     catch (Exception exception)
                     {
