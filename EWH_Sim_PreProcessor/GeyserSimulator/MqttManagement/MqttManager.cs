@@ -24,7 +24,7 @@ public class MqttManager
     /// <param name="username"></param>
     /// <param name="password"></param>
     /// <param name="certificatePath"></param>
-    public MqttManager(string broker, int port, string username, string password, string certificatePath)
+    public MqttManager(string broker, int port, string username, string password, string certificatePath = "")
     {
         _broker = broker;
         _port = port;

@@ -1,4 +1,5 @@
 using System.Text;
+using EWH_Sim_PreProcessor.ScriptCallManagement;
 using GeyserSimulator.mqttManagement;
 using IniFileParser.Model;
 using MQTTnet.Client;
@@ -74,14 +75,64 @@ public class SimThreadsManager
         // Publish the start of the manager
         await _masterConnection.Publish(_masterOutInfoTopic, new InfoMessage{Description = "Geyser Simulation Manager started.", Type = "INFO"}.Serialize());
     }
+
+    private async Task<IMqttClient?> ConnectToUserBroker(AddUserMessage message)
+    {
+        try
+        {
+            AllGeyserStates.TryAdd(message.Uid, new GeyserStates());
+                    
+            // Attempt to connect to new MQTT broker URL
+            MqttManager mqttInstance = new(message.Credentials.BrokerUrl, message.Credentials.Port, message.Credentials.Username, message.Credentials.Password);
+            await mqttInstance.Connect();
+            
+            return mqttInstance.Client;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
     
-    private Task IncomingMessageHandler(MqttApplicationMessageReceivedEventArgs e)
+    /// <summary>
+    /// Handler function for the Master Broker incoming messages
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    private async Task<Task> IncomingMessageHandler(MqttApplicationMessageReceivedEventArgs e)
     {
         Console.WriteLine($"Received message: {Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment)}");
         if (e.ApplicationMessage.Topic.Equals(_masterInAddTopic))
         {
-            // New user needs to be added to simulator and new simulator instance needs to be created
-            
+            try
+            {
+                // New user needs to be added to simulator and new simulator instance needs to be created
+                AddUserMessage? message = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<AddUserMessage>();
+                if (message?.Uid != null)
+                {
+                    GeyserStates geyserState = new();
+
+                    // Connect to user broker
+                    IMqttClient? userClient = await ConnectToUserBroker(message);
+                    
+                    // Call the script in a separate thread
+                    Thread geyserSimThread = new(() =>
+                    {
+                        if (userClient != null)
+                        {
+                            GeyserInstance geyserSimInstance = new(message.Uid, ref geyserState, userClient, _settings);
+                        }
+                    });
+                    
+                    // Start the MATLAB thread
+                    geyserSimThread.Start();
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
         }
         else if(e.ApplicationMessage.Topic.Equals(_masterInSetTopic))
         {

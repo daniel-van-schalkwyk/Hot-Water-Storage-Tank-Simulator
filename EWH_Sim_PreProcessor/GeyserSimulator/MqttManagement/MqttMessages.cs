@@ -43,3 +43,19 @@ class DataMessage : MqttMessages
     public List<decimal>? TempProfile { get; set; }
 
 }
+
+[Serializable]
+class AddUserMessage : MqttMessages
+{
+    public string? Name { get; set; }
+    public BrokerCredentials? Credentials { get; set; }
+}
+
+[Serializable]
+class BrokerCredentials
+{
+    public string? BrokerUrl { get; set; }
+    public int Port { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+}

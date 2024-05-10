@@ -8,4 +8,9 @@ public static class MqttExtensions
     {
         return JsonConvert.SerializeObject(mqttMessage);
     }
+    
+    public static T? Deserialize<T>(this string mqttMessageString)
+    {
+        return JsonConvert.DeserializeObject<T>(mqttMessageString);
+    }
 }
