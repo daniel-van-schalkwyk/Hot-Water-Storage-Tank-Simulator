@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Timers;
 using GeyserSimulator.DbManagement;
@@ -10,7 +11,7 @@ namespace GeyserSimulator.SimThreadsManager;
 
 public class SimThreadsManager
 {
-    public Dictionary<string, GeyserStates> AllGeyserStates { get; set; }
+    public Dictionary<string, GeyserStates?> AllGeyserStates { get; set; }
 
     private IList<Thread> _threadPool;
     private readonly MqttManager _masterBrokerManager;
@@ -55,7 +56,7 @@ public class SimThreadsManager
             throw;
         }
 
-        AllGeyserStates = new Dictionary<string, GeyserStates>();
+        AllGeyserStates = new Dictionary<string, GeyserStates?>();
         _threadPool = new List<Thread>();
     }
 
@@ -74,7 +75,7 @@ public class SimThreadsManager
         await _masterBrokerManager.Connect();
 
         // Assign Callback method for received messages
-        await _masterBrokerManager.AssignCallBackMethod(IncomingMessageHandler);
+        await _masterBrokerManager.AssignCallBackMethod(IncomingMasterMessageHandler);
 
         // Subscribe to all topics from settings
         foreach (KeyData? subscribingTopic in _settings.Sections["TopicsMasterSub"])
@@ -120,11 +121,27 @@ public class SimThreadsManager
         return mqttInstance.Client;
     }
 
-    private static async Task<Task> IncomingUserMessageHandler(MqttApplicationMessageReceivedEventArgs arg)
+    private async Task<Task> IncomingUserMessageHandler(MqttApplicationMessageReceivedEventArgs e)
     {
         // Handle User incoming message
-        Console.WriteLine($"Received message: {Encoding.UTF8.GetString(arg.ApplicationMessage.PayloadSegment)}");
-        
+        Console.WriteLine($"Received message: {Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment)}");
+        if(e.ApplicationMessage.Topic.Equals("GeyserIn/Set"))
+        {
+            // New user needs to be added to simulator and new simulator instance needs to be created
+            SetMessage? setMessage = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<SetMessage>();
+
+            if (setMessage?.Uid == null) return Task.CompletedTask;
+            
+            // Get the user's current geyser state 
+            AllGeyserStates.TryGetValue(setMessage.Uid, out GeyserStates? state);
+            
+            // Get the field by name using reflection
+            if (setMessage.Target == null) return Task.CompletedTask;
+            PropertyInfo? property = typeof(GeyserStates).GetProperty(setMessage.Target);
+
+            // Get the value of the field
+            property?.SetValue(state, setMessage.Value);
+        }
         return Task.CompletedTask;
     }
 
@@ -133,7 +150,7 @@ public class SimThreadsManager
     /// </summary>
     /// <param name="e"></param>
     /// <returns></returns>
-    private async Task<Task> IncomingMessageHandler(MqttApplicationMessageReceivedEventArgs e)
+    private async Task<Task> IncomingMasterMessageHandler(MqttApplicationMessageReceivedEventArgs e)
     {
         Console.WriteLine($"Received message: {Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment)}");
         if (e.ApplicationMessage.Topic.Equals(_masterInAddTopic))
@@ -160,7 +177,6 @@ public class SimThreadsManager
                             geyserSimInstance.StartSim();
                         })
                         {
-                            
                             Name = $"{message.Uid}",
                             IsBackground = true
                         };
@@ -185,7 +201,35 @@ public class SimThreadsManager
         }
         else if(e.ApplicationMessage.Topic.Equals(_masterInSetTopic))
         {
+            // New user needs to be added to simulator and new simulator instance needs to be created
+            SetMessage? setMessage = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<SetMessage>();
+            if (setMessage?.Target == null) return Task.CompletedTask;
+            PropertyInfo? property = typeof(GeyserStates).GetProperty(setMessage.Target);
             
+            
+            if (setMessage?.Uid == null)
+            {
+                // Set all geyser state targets based on Master
+                foreach (KeyValuePair<string, GeyserStates?> geyserState in AllGeyserStates)
+                {
+                    // Get the field by name using reflection
+                    if (setMessage?.Target == null) return Task.CompletedTask;
+                    
+
+                    // Get the value of the field
+                    property?.SetValue(geyserState.Value, setMessage.Value);
+                }
+                return Task.CompletedTask;
+            }
+            
+            // Get the user's current geyser state 
+            AllGeyserStates.TryGetValue(setMessage.Uid, out GeyserStates? state);
+            
+            // Get the field by name using reflection
+            if (setMessage.Target == null) return Task.CompletedTask;
+
+            // Get the value of the field
+            property?.SetValue(state, setMessage.Value);
         }
         return Task.CompletedTask;
     }

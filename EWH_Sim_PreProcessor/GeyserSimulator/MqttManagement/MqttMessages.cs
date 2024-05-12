@@ -6,7 +6,7 @@ namespace GeyserSimulator.mqttManagement;
 public class MqttMessages
 {
     [Column(IsTag = true)] public string? Type { get; set; }
-    [Column(IsMeasurement = true)] public string? Uid { get; set; }
+    [Column(IsMeasurement = true)] public string Uid { get; set; }
     [Column(IsTimestamp = true)] public DateTime Timestamp { get; set; }
     public MqttMessages()
     {
