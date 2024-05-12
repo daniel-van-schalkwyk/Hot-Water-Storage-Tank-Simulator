@@ -21,6 +21,13 @@ class SetMessage : MqttMessages
     public object? Value { get; set; }
 }
 
+class DeleteMessage : MqttMessages
+{
+    public DateTime StartTime { get; set; }
+    public DateTime stopTime { get; set; }
+    public string? Predicate { get; set; }
+}
+
 [Serializable]
 public class EventMessage : MqttMessages
 {
@@ -60,22 +67,5 @@ public class AddUserMessage : MqttMessages
     {
         Name = name;
         Credentials = credentials;
-    }
-}
-
-[Serializable]
-public class BrokerCredentials
-{
-    public string BrokerUrl { get; set; }
-    public int Port { get; set; }
-    public string Username { get; set; }
-    public string Password { get; set; }
-    
-    public BrokerCredentials(string brokerUrl, int port, string username, string password)
-    {
-        BrokerUrl = brokerUrl;
-        Port = port;
-        Username = username;
-        Password = password;
     }
 }
