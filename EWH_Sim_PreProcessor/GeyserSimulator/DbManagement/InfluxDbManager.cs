@@ -1,7 +1,6 @@
 using GeyserSimulator.mqttManagement;
 using InfluxDB.Client;
 using InfluxDB.Client.Api.Domain;
-using InfluxDB.Client.Core.Flux.Domain;
 using IniFileParser.Model;
 
 namespace GeyserSimulator.DbManagement;

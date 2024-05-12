@@ -2,9 +2,12 @@ using System.Reflection;
 using System.Text;
 using System.Timers;
 using GeyserSimulator.DbManagement;
+using GeyserSimulator.FileManagement;
 using GeyserSimulator.mqttManagement;
 using IniFileParser.Model;
 using MQTTnet.Client;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Timer = System.Timers.Timer;
 
 namespace GeyserSimulator.SimThreadsManager;
@@ -23,12 +26,16 @@ public class SimThreadsManager
     private readonly string _masterOutInfoTopic;
     private readonly string _masterOutDataTopic;
     private readonly string _masterOutEventTopic;
+    private readonly string _userListPath;
+    private JToken _userList;
 
     public SimThreadsManager(MqttManager masterBrokerManager, InfluxDbManager dbManager, IniData settings)
     {
         _masterBrokerManager = masterBrokerManager;
         _dbManager = dbManager;
         _settings = settings;
+        _userListPath = settings["FilePaths"]["userListPath"];
+        _userList = new JArray();
         
         // Get Subscribe Topics
         try
@@ -60,10 +67,42 @@ public class SimThreadsManager
         _threadPool = new List<Thread>();
     }
 
+    /// <summary>
+    /// A method that is used to read existing users and connect the app to their brokers
+    /// </summary>
+    private async void StartUpExistingUsers()
+    {
+        FileWorker fileWorker = new();
+        _userList = fileWorker.ReadJson(_userListPath) ?? new JArray();
+
+        foreach (JToken user in _userList)
+        {
+            // Create new geyser state
+            GeyserStates geyserState = new();
+
+            // Add new geyser state
+            string? uid = user.ToObject<AddUserMessage>()?.Uid;
+            if (uid != null)
+                AllGeyserStates.TryAdd(uid, geyserState);
+            try
+            {
+                await ConnectToUserBroker(user.ToObject<AddUserMessage>());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+    }
+
     public void Start()
     {
         // Connect to Master broker and listen
         ConnectMasterBroker();
+        
+        // Connect existing users
+        StartUpExistingUsers();
     }
 
     /// <summary>
@@ -93,32 +132,41 @@ public class SimThreadsManager
     /// <param name="message"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    private async Task<IMqttClient?> ConnectToUserBroker(AddUserMessage message)
+    private async Task<IMqttClient?> ConnectToUserBroker(AddUserMessage? message)
     {
-        if (message.Uid == null) throw new InvalidOperationException("No UID was provided in message");
+        if (message is null)
+            return default;
         
-        // Add new geyser state
-        AllGeyserStates.TryAdd(message.Uid, new GeyserStates());
+        if (message.Uid == null) 
+            throw new InvalidOperationException("No UID was provided in message");
 
         // Attempt to connect to new MQTT broker URL
-        MqttManager mqttInstance = new(message.Credentials.BrokerUrl, message.Credentials.Port, message.Credentials.Username, message.Credentials.Password);
-        await mqttInstance.Connect();
-        await mqttInstance.AssignCallBackMethod(IncomingUserMessageHandler);
-        await mqttInstance.Publish(_settings.Sections["TopicsPub"]["geyserInfo"],
-            new InfoMessage
-            {
-                Description = $"Geyser simulator connected to {message.Name}'s broker", Uid = message.Uid,
-                Type = "INFO"
-            }.Serialize());
-        
-        // Subscribe to all topics from settings
-        foreach (KeyData? subscribingTopic in _settings.Sections["TopicsSub"])
+        try
         {
-            await mqttInstance.Subscribe(subscribingTopic.Value);
-        }
+            MqttManager mqttInstance = new(message.Credentials.BrokerUrl, message.Credentials.Port, message.Credentials.Username, message.Credentials.Password);
+            await mqttInstance.Connect();
+            await mqttInstance.AssignCallBackMethod(IncomingUserMessageHandler);
+            await mqttInstance.Publish(_settings.Sections["TopicsPub"]["geyserInfo"],
+                new InfoMessage
+                {
+                    Description = $"Geyser simulator connected to {message.Name}'s broker", Uid = message.Uid,
+                    Type = "INFO"
+                }.Serialize());
         
-        // Return client
-        return mqttInstance.Client;
+            // Subscribe to all topics from settings
+            foreach (KeyData? subscribingTopic in _settings.Sections["TopicsSub"])
+            {
+                await mqttInstance.Subscribe(subscribingTopic.Value);
+            }
+        
+            // Return client
+            return mqttInstance.Client;
+        }
+        catch (Exception)
+        {
+            Console.WriteLine($"Could not connect to client broker [client uid: {message.Uid}]");
+            return default;
+        }
     }
 
     private async Task<Task> IncomingUserMessageHandler(MqttApplicationMessageReceivedEventArgs e)
@@ -163,6 +211,9 @@ public class SimThreadsManager
                 {
                     // Create new geyser state
                     GeyserStates geyserState = new();
+                    
+                    // Add new geyser state
+                    AllGeyserStates.TryAdd(message.Uid, geyserState);
                     
                     try
                     {
@@ -215,7 +266,6 @@ public class SimThreadsManager
                     // Get the field by name using reflection
                     if (setMessage?.Target == null) return Task.CompletedTask;
                     
-
                     // Get the value of the field
                     property?.SetValue(geyserState.Value, setMessage.Value);
                 }

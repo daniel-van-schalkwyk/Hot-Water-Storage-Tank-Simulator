@@ -117,7 +117,7 @@ namespace GeyserSimulator.FileManagement
         /// <param name="filePath">The file path to the JSON file</param>
         /// <param name="settings">The JsonSerializerSettings to use</param>
         /// <returns>The contents of the JSON file as a JObject</returns>
-        public JObject? ReadJson(string filePath, JsonSerializerSettings? settings = null)
+        public JToken? ReadJson(string filePath, JsonSerializerSettings? settings = null)
         {
             if (string.IsNullOrEmpty(filePath))
             {
@@ -141,7 +141,7 @@ namespace GeyserSimulator.FileManagement
                         sr.Close();
 
                         // Convert JToken to JObject with custom serialization settings
-                        return token.ToObject<JObject>(serializer);
+                        return token.ToObject<JToken>(serializer);
                     }
                 }
             }

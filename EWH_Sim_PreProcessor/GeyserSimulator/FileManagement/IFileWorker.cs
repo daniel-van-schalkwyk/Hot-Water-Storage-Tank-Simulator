@@ -20,7 +20,7 @@ namespace FileManagement
         /// <param name="filePath">The file path to the JSON file</param>
         /// <param name="settings">The JsonSerializerSettings to use</param>
         /// <returns>The contents of the JSON file as a JObject</returns>
-        public JObject? ReadJson(string filePath, JsonSerializerSettings? settings = null);
+        public JToken? ReadJson(string filePath, JsonSerializerSettings? settings = null);
 
         /// <summary>
         /// A wrapped method to encapsulate Renaming functionality from VB library 
