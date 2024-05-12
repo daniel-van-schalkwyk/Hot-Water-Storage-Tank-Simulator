@@ -33,7 +33,7 @@ classdef EHWST_Simulator
             end
             
             % Populate geometry object with physial parameters of tank
-            obj = populatePhysicalParameters(obj);
+            obj = populateGeyserCharacteristics(obj);
             
             % Populate the geometric object with calculated geometric
             % parameters
@@ -45,7 +45,7 @@ classdef EHWST_Simulator
             end
 
             % Populate the simulation parameters
-            obj = populateSimParameters(obj);
+            obj = populateModelParameters(obj);
 
             if(configJson.input.source.csv == true)
                 obj.TimeVector = datetime(configJson.profiles.time.values, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss');
@@ -215,21 +215,22 @@ classdef EHWST_Simulator
             end
         end
     
-        function obj = populatePhysicalParameters(obj)
+        function obj = populateGeyserCharacteristics(obj)
             try 
-                obj.TankGeom.t = obj.ConfigJson.config.tWall;                               % Tank thickness [m]
-                obj.TankGeom.L = obj.ConfigJson.config.longLength;                          % Length [m]
-                obj.TankGeom.R = obj.ConfigJson.config.diameter/2 - obj.TankGeom.t;         % Radius (minus tank thickness) [m]
-                obj.TankGeom.n = obj.ConfigJson.config.nodeNumber;
-                obj.TankGeom.orientation = obj.ConfigJson.config.orientation;
-                obj.TankGeom.layerConfig = obj.ConfigJson.config.layerConfig;
+                obj.TankGeom.t = obj.ConfigJson.geyser.tWall;                               % Tank thickness [m]
+                obj.TankGeom.L = obj.ConfigJson.geyser.longLength;                          % Length [m]
+                obj.TankGeom.R = obj.ConfigJson.geyser.diameter/2 - obj.TankGeom.t;         % Radius (minus tank thickness) [m]
+                obj.TankGeom.n = obj.ConfigJson.modelParameters.nodeNumber;
+                obj.TankGeom.orientation = obj.ConfigJson.geyser.orientation;
+                obj.TankGeom.layerConfig = obj.ConfigJson.geyser.layerConfig;
+                obj.TankGeom.h_thermostat_rel = obj.ConfigJson.geyser.h_thermistor_rel;
             catch ex
                 fprintf('An error occurred: %s\n', ex.message);
                 throw ex;
             end
         end
     
-        function obj = populateSimParameters(obj)
+        function obj = populateModelParameters(obj)
             
             try
                 obj.SimStartTime = datetime(obj.ConfigJson.simParameters.startTime);

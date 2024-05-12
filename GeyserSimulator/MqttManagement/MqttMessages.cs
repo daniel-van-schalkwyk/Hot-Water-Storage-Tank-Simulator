@@ -58,12 +58,13 @@ public class DataMessage : MqttMessages
 }
 
 [Serializable]
-public class AddUserMessage : MqttMessages
+public class UserMessage : MqttMessages
 {
     public string Name { get; set; }
+    public bool IsAdmin { get; set; }
     public BrokerCredentials Credentials { get; set; }
     
-    public AddUserMessage(string name, BrokerCredentials credentials)
+    public UserMessage(string name, BrokerCredentials credentials)
     {
         Name = name;
         Credentials = credentials;

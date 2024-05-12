@@ -81,12 +81,12 @@ public class SimThreadsManager
             GeyserStates geyserState = new();
 
             // Add new geyser state
-            string? uid = user.ToObject<AddUserMessage>()?.Uid;
+            string? uid = user.ToObject<UserMessage>()?.Uid;
             if (uid != null)
                 AllGeyserStates.TryAdd(uid, geyserState);
             try
             {
-                await ConnectToUserBroker(user.ToObject<AddUserMessage>());
+                await ConnectToUserBroker(user.ToObject<UserMessage>());
             }
             catch (Exception e)
             {
@@ -132,7 +132,7 @@ public class SimThreadsManager
     /// <param name="message"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    private async Task<IMqttClient?> ConnectToUserBroker(AddUserMessage? message)
+    private async Task<IMqttClient?> ConnectToUserBroker(UserMessage? message)
     {
         if (message is null)
             return default;
@@ -206,7 +206,7 @@ public class SimThreadsManager
             try
             {
                 // New user needs to be added to simulator and new simulator instance needs to be created
-                AddUserMessage? message = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<AddUserMessage>();
+                UserMessage? message = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<UserMessage>();
                 if (message?.Uid != null)
                 {
                     // Create new geyser state
@@ -214,11 +214,25 @@ public class SimThreadsManager
                     
                     // Add new geyser state
                     AllGeyserStates.TryAdd(message.Uid, geyserState);
-                    
+
                     try
                     {
                         // Connect to user broker
                         IMqttClient? userClient = await ConnectToUserBroker(message);
+                        if (userClient is null)
+                        {
+                            return Task.CompletedTask;
+                        }
+                        
+                        // Update user list
+                        if (_userList.Any(p => p["Uid"]?.Value<string>() == message.Uid))
+                        {
+                            Console.WriteLine($"{message.Uid} already exists, user will be updated");
+                            _userList.FirstOrDefault(p => p["Uid"].Value<string>() == message.Uid)?.Remove();
+                        }
+                        // Add user
+                        ((JArray)_userList).Add(JToken.FromObject(message));
+                        new FileWorker().WriteJson(_userListPath, _userList, new JsonSerializerSettings{Formatting = Formatting.Indented});
                         
                         // Call the script in a separate thread
                         Thread geyserSimThread = new(() =>
