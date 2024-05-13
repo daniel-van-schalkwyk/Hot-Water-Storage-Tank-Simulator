@@ -41,6 +41,11 @@ public class MqttManager
         _password = credentials.Password;
     }
     
+    public MqttManager(IMqttClient? client)
+    {
+        Client = client;
+    }
+    
     /// <summary>
     /// 
     /// </summary>
@@ -92,7 +97,7 @@ public class MqttManager
         // Callback function when a message is received
         if (Client != null)
         {
-            Client.ApplicationMessageReceivedAsync += e =>
+            Client.ApplicationMessageReceivedAsync += (e) =>
             {
                 // Interpret messages
                 callback(e);

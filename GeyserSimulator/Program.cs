@@ -5,7 +5,7 @@ using IniFileParser.Model;
 
 // Import Settings
 IniFileParser.IniFileParser fileParser = new();
-IniData? settingsData = fileParser.ReadFile(@"C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EWH_Sim_PreProcessor\GeyserSimulator\Settings\Settings.ini");
+IniData? settingsData = fileParser.ReadFile(@"C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\GeyserSimulator\Settings\Settings.ini");
 SectionDataCollection? settings = settingsData.Sections;
 
 string brokerUrl = settings["ConnectionDetails"]["masterBrokerUrl"].Trim('"');

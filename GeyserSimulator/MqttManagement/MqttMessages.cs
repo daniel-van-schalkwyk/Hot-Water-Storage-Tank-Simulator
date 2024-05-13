@@ -1,3 +1,6 @@
+using EWH_Sim_PreProcessor.ConfigStructures;
+using GeyserSimulator.ConfigStructures;
+using GeyserSimulator.SimThreadsManager;
 using InfluxDB.Client.Core;
 
 namespace GeyserSimulator.mqttManagement;
@@ -17,8 +20,7 @@ public class MqttMessages
 [Serializable]
 class SetMessage : MqttMessages
 {
-    public string? Target { get; set; }
-    public object? Value { get; set; }
+    public List<NameValuePair> Targets;
 }
 
 class DeleteMessage : MqttMessages
@@ -38,6 +40,12 @@ public class EventMessage : MqttMessages
 public class InfoMessage : MqttMessages
 {
     public string? Description { get; set; }
+    public GeyserStates States { get; set; }
+
+    public InfoMessage()
+    {
+        Type = "INFO";
+    }
 }
 
 [Serializable]

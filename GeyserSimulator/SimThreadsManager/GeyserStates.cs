@@ -2,8 +2,9 @@ namespace GeyserSimulator.SimThreadsManager;
 
 public class GeyserStates
 {
-    public bool Power { get; set; }
-    public decimal SetTemp { get; set; }
-    public decimal FlowRate { get; set; }
-    public decimal InletTemp { get; set; }
+    public object Power { get; set; }
+    public object SetTemp { get; set; }
+    public object FlowRate { get; set; }
+    public object InletTemp { get; set; }
+    public object AmbientTemp { get; set; }
 }

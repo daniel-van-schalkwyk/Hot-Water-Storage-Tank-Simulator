@@ -1,4 +1,4 @@
-namespace EWH_Sim_PreProcessor.ConfigStructures;
+namespace GeyserSimulator.ConfigStructures;
 
 [Serializable]
 public class Source

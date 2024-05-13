@@ -1,3 +1,5 @@
+using GeyserSimulator.ConfigStructures;
+
 namespace EWH_Sim_PreProcessor.ConfigStructures;
 
 [Serializable]

@@ -4,9 +4,13 @@ namespace GeyserSimulator.mqttManagement;
 
 public static class MqttExtensions
 {
-    public static string Serialize(this MqttMessages mqttMessage)
+    public static string Serialize(this MqttMessages mqttMessage, JsonSerializerSettings? settings = null)
     {
-        return JsonConvert.SerializeObject(mqttMessage);
+        settings ??= new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        };
+        return JsonConvert.SerializeObject(mqttMessage, settings);
     }
     
     public static T? Deserialize<T>(this string mqttMessageString)
