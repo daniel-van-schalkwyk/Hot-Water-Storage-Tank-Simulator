@@ -8,7 +8,7 @@
     "GeyserStates_current": {
         "Power": 3000, 
         "SetTemp": 60, 
-        "FlowRate": 0.05,
+        "FlowRate": 0.0005,
         "InletTemp": 20,
         "AmbientTemp": 25
     },

@@ -1,9 +1,8 @@
-%% Geyser Simulator LITE
-function [] = SimulatorLite(uid, settingsPath, c)
-    
+function SimulatorLite(uid, settingsPath, configPath)
+    %% Geyser Simulator LITE
     % Read settings for geyser simulation
     settings = ini2struct(settingsPath); 
-
+    
     % Define MQTT broker parameters from settings
     broker = "ssl://" + settings.ConnectionDetails.masterBrokerUrl;  
     port = int32(settings.ConnectionDetails.port);
@@ -18,35 +17,64 @@ function [] = SimulatorLite(uid, settingsPath, c)
     pubInfoTopic = settings.SimulatorPubTopics.geyserInfoTopicRoot + "/" + uid;
     
     % Connect to MQTT master client
-    client = ConnectMqtt(broker, port, uid, username, password, certificateRoot);
+    try 
+        client = ConnectMqtt(broker, port, uid, username, password, certificateRoot);
+    catch err
+        ackMessage.Description = "Error: " + err.message;
+        publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+        return;
+    end
     
     % Subscribe to topics
     subscribe(client, updateTopic, Callback=@updateCallBackFunc)
     sprintf('Subscribed to %s', updateTopic)
     
+    % Import config data 
+    try 
+        configData = importConfigData(configPath);
+    catch err
+        ackMessage.Description = "Error: " + err.message;
+        publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+        return;
+    end
+    
+    % Generate the Geometric data for the tank
+    try 
+        tankGeom = generateTankCharacteristics(configData);
+    catch err
+        ackMessage.Description = "Error: " + err.message;
+        publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+        return;
+    end
+
+    % Get all model parameters
+    try 
+        modelParams = importModelParameters(configData);
+    catch err
+        ackMessage.Description = "Error: " + err.message;
+        publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+        return;
+    end
+    
     % Loop indefinitely to keep the listener running
-    ListenToMqtt(client)
+    ListenToMqtt(client, configData, tankGeom, modelParams)
     
     % When done, disconnect from the broker
     disconnect(client)
 
-
     %% Functions
-    function [] = ListenToMqtt(client)
-    
+    function [] = ListenToMqtt(client, configData, tankGeomData, modelParameters)
         % Loop indefinitely to keep the listener running
         while true
-            
             if(updateReceived)
                 % Acknowledge message
                 ackMessage.Description = "ACK";
                 publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
                 updateReceived = false;
-                
                 % Interpret the update message
                 try
                     % Run model with provided inputs
-                    Results = GeyserModel(updateData);
+                    Results = GeyserModel(updateData, configData, tankGeomData, modelParameters);
                     % Publish results
                     publishMessage(client, pubDataTopic, jsonencode(Results))
                 catch err
@@ -54,13 +82,61 @@ function [] = SimulatorLite(uid, settingsPath, c)
                     publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
                 end
             end
-
-            % Wait 10ms
-            pause(0.01); 
-    
+            % Wait 5ms
+            pause(0.005); 
         end
     end
     
+    %% The entry point for the geyser model
+    function Results = GeyserModel(geyserStateData, configData, tankGeomData, modelParams)
+        % The model that is executed and that is used to generate the
+        % results
+        % Prepare arguments for model
+        inputs.T_inlet = geyserStateData.GeyserStates_current.InletTemp;
+        inputs.T_amb = geyserStateData.GeyserStates_current.AmbientTemp;
+        inputs.flowrate = geyserStateData.GeyserStates_current.FlowRate;
+        nodes = tankGeomData.n;
+        
+        simStartDateTime = geyserStateData.Sim.SimDateTime;
+        timeScale = geyserStateData.Sim.TimeScale;
+        actualDuration = geyserStateData.Sim.SimDateTime.Duration_s;
+        simParams.delta_t_s = obj.Delta_t;          
+        simParams.simTime_steps = timeScale*actualDuration/modelParams.dt;
+ 
+          
+        simParams.rho_w = @(T) (1.49343e-3 - 3.7164e-6*T + 7.09782e-9*T.^2 - 1.90321e-20*T.^6).^-1;                    
+        simParams.cp_w = @(T) 8.15599e3 - 2.80627*10*T + 5.11283e-2*T.^2 - 2.17582e-13*T.^6;                     
+        simParams.T_initial = zeros(obj.TankGeom.n, 1) + obj.SimParams.tempInit;            
+        simParams.U_amb = zeros(tankGeomData.n, 1) + 2;
+        simParams.U_layers = zeros(nodes-1, 1) + 5;
+        simParams.n_mix_charge = 1;
+        simParams.n_mix_discharge = 1;
+        simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 10;
+        simParams.layerMixPortions = zeros(nodes-1, 1);
+        simParams.layerMixPortions([1:1, end-1:end]) = 0;
+        simParams.eHeatingPower = obj.ConfigJson.input.coilPower.value;
+        simParams.gCoeffs = [
+                                        0.073178074
+                                        0.123146458
+                                        0.150144593
+                                        0.161594474
+                                        0.161867056
+                                        0.145951432
+                                        0.108614193
+                                        0
+                                        0
+                                            ];
+        simParams.h_ThermostatNorm = 0.43;
+        simParams.setTemp = 50;
+
+        % Call the main generic state-space function with prepared
+        % inputs
+        [T_mat_sim, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
+
+        Results.Description = "Model execution triggered";
+    end
+
+    %% Client connection method used to establish a connection with the master broker
     function client = ConnectMqtt(brokerUrl, port, uid, username, password, certificateRoot)
         % Method used to connect to the broker using connection information
         % from the settings file.
@@ -68,6 +144,7 @@ function [] = SimulatorLite(uid, settingsPath, c)
     
     end
     
+    %% Callback unctio that needs to be triggered when message is received
     function updateCallBackFunc(topic, data)
         % Callback method to intercept MQTT messages and to poulate into
         % volatile variables
@@ -78,16 +155,75 @@ function [] = SimulatorLite(uid, settingsPath, c)
             disp(data);
         end      
     end
-
+    
+    %% Used to write messages to the master broker
     function publishMessage(client, topic, payload)
         write(client, topic, payload, QualityOfService = 1, Retain = true)
     end
+    
+    %% Get the configuration data needed for simulation
+    function configData = importConfigData(configJsonFileUrl)
+        % Open and read the configuration file
+        try
+            fid = fopen(configJsonFileUrl, 'r');
+            str = fread(fid, '*char')';
+            fclose(fid);
+        catch ex
+            fprintf('An error occurred: %s\n', ex.message);
+            throw exception;
+        end
 
-    function Results = GeyserModel(geyserData)
-        % The model that is executed and that is used to generate the
-        % results
-        
-        Results.Description = "Model execution triggered";
+        % Decode the configuration file
+        try 
+            configData = jsondecode(str);
+        catch ex
+            fprintf('An error occurred: %s\n', ex.message);
+            throw exception;
+        end
+    end
+    
+    %% Generate tank geometry object
+    function geyserOut = generateTankCharacteristics(configJson)
+        try 
+            % Get geometric attributes
+            geyserOut.t = configJson.geyser.tWall;                               
+            geyserOut.L = configJson.geyser.longLength;                          
+            geyserOut.R = configJson.geyser.diameter/2 - geyserOut.t;
+            geyserOut.h_thermostat_rel = configJson.geyser.h_thermistor_rel;
+            geyserOut.orientation = configJson.geyser.orientation;
+
+            % Get model stuff relatng to geomerty
+            geyserOut.layerConfig = configJson.modelParameters.layerConfig;
+            geyserOut.n = configJson.modelParameters.nodeNumber;
+                       
+            % Populate the more advanced geometric characteristics
+            geyserOut = EwhGeometryTools.populateTankGeometry(geyserOut);
+
+            % Get other characteristics
+            geyserOut.coilPower = configJson.geyser.coilPower;
+            geyserOut.setTemp = configJson.geyser.setTemp;
+            geyserOut.hysteresisBand = configJson.geyser.hysteresisBand;
+
+        catch ex
+            fprintf('An error occurred: %s\n', ex.message);
+            throw ex;
+        end
+    end
+
+    %% Function to import model parameters
+    function modelParams = importModelParameters(configData)
+        try 
+            modelParams.n_mix_discharge = configData.modelParameters.n_mix_discharge; 
+            modelParams.n_mix_charge = configData.modelParameters.n_mix_charge; 
+            modelParams.dt = configData.modelParameters.dt; 
+            modelParams.tempInit = configData.modelParameters.tempInit;
+            modelParams.U_layers = configData.modelParameters.U_layers;
+            modelParams.U_Ambient = configData.modelParameters.U_Ambient;
+            modelParams.g_coeffs = configData.modelParameters.g_coeffs;          
+        catch error
+            fprintf('An error occurred: %s\n', error.message);
+            throw ex;
+        end  
     end
 end
 

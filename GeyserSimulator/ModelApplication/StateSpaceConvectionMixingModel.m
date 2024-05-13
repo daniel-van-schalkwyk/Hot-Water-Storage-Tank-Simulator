@@ -47,13 +47,13 @@ function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeo
     for time = 1:1:simTime_steps
     
         % Get the current mass flow rate 
-        massFlow_current = m_flowrate(time);
+        massFlow_current = m_flowrate;
     
         % Get current ambient temp T_amb
-        T_amb_current = T_amb(time);
+        T_amb_current = T_amb;
 
         % Get the current inlet temperature
-        T_inlet_current = T_inlet(time);
+        T_inlet_current = T_inlet;
 
         % Get the current thermostat temp
         ThermostatPosIndex = ceil(h_ThermostatNorm*length(T_vec_current));
@@ -107,7 +107,7 @@ function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeo
         end
         
         %% Construct input vector 
-        coilState = Thermostat(thermostatTemp, setTemp, 3, prevCoilState);
+        coilState = Thermostat(thermostatTemp, setTemp, simParams.hysteresisBand, prevCoilState);
         coilStates(time) = coilState;
         prevCoilState = coilState;
         u_input = [massFlow_current; massFlow_current*T_inlet_current; T_amb_current; coilState*Q_coil];
