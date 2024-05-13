@@ -1,51 +1,94 @@
 %% Geyser Simulator LITE
-function [] = SimulatorLite(uid, settingsPath)
+function [] = SimulatorLite(uid, settingsPath, c)
     
-    settings = ini2struct(settingsPath);
+    % Read settings for geyser simulation
+    settings = ini2struct(settingsPath); 
 
-    % Define MQTT broker parameters
-    broker = settings.ConnectionDetails.masterBrokerUrl;  
-    port = int32(settings.ConnectionDetails.port);             % MQTT topic to subscribe to
+    % Define MQTT broker parameters from settings
+    broker = "ssl://" + settings.ConnectionDetails.masterBrokerUrl;  
+    port = int32(settings.ConnectionDetails.port);
     username = settings.ConnectionDetails.username;
     password = settings.ConnectionDetails.password;
     certificateRoot = settings.ConnectionDetails.certPath;
+
+    % Get pub and sub topics
+    global updateTopic pubDataTopic pubInfoTopic updateData updateReceived
+    updateTopic = settings.SimulatorSubTopics.geyserUpdateTopicRoot + "/" + uid;
+    pubDataTopic = settings.SimulatorPubTopics.geyserDataTopicRoot + "/" + uid;
+    pubInfoTopic = settings.SimulatorPubTopics.geyserInfoTopicRoot + "/" + uid;
     
-    updateTopic = "GeyserSim//Update/" + uid;
-    pubTopic = "GeyserSim//Data/" + uid;
-    
+    % Connect to MQTT master client
     client = ConnectMqtt(broker, port, uid, username, password, certificateRoot);
     
-    subscribe(client, updateTopic,Callback=@updateCallBackFunc)
+    % Subscribe to topics
+    subscribe(client, updateTopic, Callback=@updateCallBackFunc)
     sprintf('Subscribed to %s', updateTopic)
     
     % Loop indefinitely to keep the listener running
-    while true
-        pause(1); % Adjust the pause duration as needed
-    end
+    ListenToMqtt(client)
     
     % When done, disconnect from the broker
     disconnect(client)
-    
-    function [] = ListenToMqtt()
+
+
+    %% Functions
+    function [] = ListenToMqtt(client)
     
         % Loop indefinitely to keep the listener running
         while true
-            pause(0.1); 
+            
+            if(updateReceived)
+                % Acknowledge message
+                ackMessage.Description = "ACK";
+                publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+                updateReceived = false;
+                
+                % Interpret the update message
+                try
+                    % Run model with provided inputs
+                    Results = GeyserModel(updateData);
+                    % Publish results
+                    publishMessage(client, pubDataTopic, jsonencode(Results))
+                catch err
+                    ackMessage.Description = "Error: " + err.message;
+                    publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+                end
+            end
+
+            % Wait 10ms
+            pause(0.01); 
     
         end
     end
     
     function client = ConnectMqtt(brokerUrl, port, uid, username, password, certificateRoot)
-    
+        % Method used to connect to the broker using connection information
+        % from the settings file.
         client = mqttclient(brokerUrl, Port = port, ClientID = uid, Username = username, Password = password, CARootCertificate = certificateRoot);
     
     end
     
     function updateCallBackFunc(topic, data)
-        disp(topic);
-        disp(data);
+        % Callback method to intercept MQTT messages and to poulate into
+        % volatile variables
+        if(topic == updateTopic)
+            updateData = jsondecode(data);
+            updateReceived = true;
+            disp(topic);
+            disp(data);
+        end      
     end
 
+    function publishMessage(client, topic, payload)
+        write(client, topic, payload, QualityOfService = 1, Retain = true)
+    end
+
+    function Results = GeyserModel(geyserData)
+        % The model that is executed and that is used to generate the
+        % results
+        
+        Results.Description = "Model execution triggered";
+    end
 end
 
 

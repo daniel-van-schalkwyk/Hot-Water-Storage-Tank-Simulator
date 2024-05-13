@@ -233,10 +233,10 @@ classdef EHWST_Simulator
         function obj = populateModelParameters(obj)
             
             try
-                obj.SimStartTime = datetime(obj.ConfigJson.simParameters.startTime);
-                obj.SimStopTime = datetime(obj.ConfigJson.simParameters.stopTime);
-                obj.Delta_t = int32(obj.ConfigJson.simParameters.dt);
-                obj.SimParams = obj.ConfigJson.simParameters;
+                obj.SimStartTime = datetime(obj.ConfigJson.modelParameters.startTime);
+                obj.SimStopTime = datetime(obj.ConfigJson.modelParameters.stopTime);
+                obj.Delta_t = int32(obj.ConfigJson.modelParameters.dt);
+                obj.SimParams = obj.ConfigJson.modelParameters;
             catch ex
                 fprintf('An error occurred: %s\n', ex.message);
                 throw ex;

@@ -6,19 +6,20 @@
     "saveData": false,
     "id": 1
   },
-  "config": {
+  "geyser": {
     "orientation": "H",
     "tWall": 0.0015,
     "longLength": 1.19,
     "diameter": 0.4,
     "capacity": 0.15,
     "layerConfig": "CH",
-    "nodeNumber": 9
+    "h_thermistor_rel": 0.44
   },
-  "simParameters": {
+  "modelParameters": {
     "startTime": "2024-02-05T00:00:00",
     "stopTime": "2024-02-06T00:00:00",
     "dt": 5.0,
+    "nodeNumber": 9,
     "tempInit": 20
   },
   "input": {
