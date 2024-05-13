@@ -1,0 +1,52 @@
+%% Geyser Simulator LITE
+function [] = SimulatorLite(uid, settingsPath)
+    
+    settings = ini2struct(settingsPath);
+
+    % Define MQTT broker parameters
+    broker = settings.ConnectionDetails.masterBrokerUrl;  
+    port = int32(settings.ConnectionDetails.port);             % MQTT topic to subscribe to
+    username = settings.ConnectionDetails.username;
+    password = settings.ConnectionDetails.password;
+    certificateRoot = settings.ConnectionDetails.certPath;
+    
+    updateTopic = "GeyserSim//Update/" + uid;
+    pubTopic = "GeyserSim//Data/" + uid;
+    
+    client = ConnectMqtt(broker, port, uid, username, password, certificateRoot);
+    
+    subscribe(client, updateTopic,Callback=@updateCallBackFunc)
+    sprintf('Subscribed to %s', updateTopic)
+    
+    % Loop indefinitely to keep the listener running
+    while true
+        pause(1); % Adjust the pause duration as needed
+    end
+    
+    % When done, disconnect from the broker
+    disconnect(client)
+    
+    function [] = ListenToMqtt()
+    
+        % Loop indefinitely to keep the listener running
+        while true
+            pause(0.1); 
+    
+        end
+    end
+    
+    function client = ConnectMqtt(brokerUrl, port, uid, username, password, certificateRoot)
+    
+        client = mqttclient(brokerUrl, Port = port, ClientID = uid, Username = username, Password = password, CARootCertificate = certificateRoot);
+    
+    end
+    
+    function updateCallBackFunc(topic, data)
+        disp(topic);
+        disp(data);
+    end
+
+end
+
+
+
