@@ -1,0 +1,26 @@
+{
+    "Uid": "A001",
+    "Type": "Set",
+    "Targets": [
+      {
+        "Name": "Power",
+        "Value": 3000
+      },
+      {
+        "Name": "FlowRate",
+        "Value": 0
+      },
+      {
+        "Name": "InletTemp",
+        "Value": 20
+      },
+      {
+        "Name": "AmbientTemp",
+        "Value": 25
+      },
+      {
+        "Name": "SetTemp",
+        "Value": 60
+      }
+    ]
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "Type": "AddUser",
+    "Uid": "U0001",
+    "Name": "Student0001",
+    "Credentials": {
+      "BrokerUrl": "58bd57a67fbb4f52ae97a6b78a0bebff.s1.eu.hivemq.cloud",
+      "Port": 8883,
+      "Username": "geyserSimUser1",
+      "Password": "geyserSimUser1!"
+    }
+  },
+  {
+    "Type": "AddUser",
+    "Uid": "U0002",
+    "Name": "Student0002",
+    "Credentials": {
+      "BrokerUrl": "",
+      "Port": 8883,
+      "Username": "",
+      "Password": "!"
+    }
+  }
+]

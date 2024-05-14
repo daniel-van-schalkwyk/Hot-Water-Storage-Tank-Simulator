@@ -1,13 +1,13 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration file="C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EHWST_Simulation_Start.prj" location="C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator" name="EHWST_Simulation_Start" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="286994864" file="C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EHWST_Simulation_Start.prj" location="C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator" name="EHWST_Simulation_Start" preferred-package-location="C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EHWST_Simulation_Start\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>EHWST_Simulation_Start</param.appname>
     <param.icon />
     <param.icons />
-    <param.version>1.0.4</param.version>
+    <param.version>1.1.6</param.version>
     <param.authnamewatermark>Daniel van Schalkwyk</param.authnamewatermark>
     <param.email>pdvs14@gmail.com</param.email>
     <param.company>Stellenbosch University</param.company>
-    <param.summary />
+    <param.summary>An application to simulate the thermal response of a domestic hot water storage cylinder.</param.summary>
     <param.description />
     <param.screenshot />
     <param.guid />
@@ -31,8 +31,8 @@
     <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>false</param.windows.command.prompt>
-    <param.create.log>false</param.create.log>
-    <param.log.file />
+    <param.create.log>true</param.create.log>
+    <param.log.file>log.txt</param.log.file>
     <param.native.matlab>false</param.native.matlab>
     <param.checkbox>false</param.checkbox>
     <param.example />
@@ -45,7 +45,6 @@
     <unset>
       <param.icon />
       <param.icons />
-      <param.summary />
       <param.description />
       <param.screenshot />
       <param.guid />
@@ -67,8 +66,6 @@
       <param.no.mcr />
       <param.package.mcr.name />
       <param.no.mcr.name />
-      <param.create.log />
-      <param.log.file />
       <param.native.matlab />
       <param.checkbox />
       <param.example />
@@ -93,10 +90,13 @@
       <file>${PROJECT_ROOT}\Simulator\simProfile.m</file>
       <file>${PROJECT_ROOT}\Simulator\simProfiles.m</file>
       <file>${PROJECT_ROOT}\Simulator\StateSpaceConvectionMixingModel.m</file>
+      <file>${PROJECT_ROOT}\Simulator\StateSpaceConvectionMixingModel_OldWorking.m</file>
       <file>${PROJECT_ROOT}\Simulator\StateSpaceConvectionModel.m</file>
     </fileset.resources>
     <fileset.package />
-    <fileset.depfun />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\Simulator\Thermostat.m</file>
+    </fileset.depfun>
     <build-deliverables>
       <file location="${PROJECT_ROOT}\EHWST_Simulation_Start\for_testing" name="splash.png" optional="false">C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EHWST_Simulation_Start\for_testing\splash.png</file>
       <file location="${PROJECT_ROOT}\EHWST_Simulation_Start\for_testing" name="EHWST_Simulation_Start.exe" optional="false">C:\Users\DanielvanSchalkwyk\OneDrive - Stellenbosch University\PhD\EWH simulator\EHWST_Simulation_Start\for_testing\EHWST_Simulation_Start.exe</file>
@@ -104,10 +104,10 @@
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2022a</root>
+      <root>C:\Program Files\MATLAB\R2024a</root>
       <toolboxes>
         <toolbox name="matlabcoder" />
-        <toolbox name="neuralnetwork" />
+        <toolbox name="embeddedcoder" />
       </toolboxes>
       <toolbox>
         <matlabcoder>
@@ -115,9 +115,9 @@
         </matlabcoder>
       </toolbox>
       <toolbox>
-        <neuralnetwork>
+        <embeddedcoder>
           <enabled>true</enabled>
-        </neuralnetwork>
+        </embeddedcoder>
       </toolbox>
     </matlab>
     <platform>

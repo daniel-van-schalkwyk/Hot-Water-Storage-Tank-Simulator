@@ -1,0 +1,29 @@
+{
+    "Sim": {
+        "Active": true, 
+        "SimDateTime": "2024-05-13T00:00:00.000+02", 
+        "TimeScale": 60,
+        "Duration_s": 5
+    },
+    "GeyserStates_current": {
+        "Power": 3000, 
+        "SetTemp": 60, 
+        "FlowRate": 0.0005,
+        "InletTemp": 20,
+        "AmbientTemp": 25
+    },
+    "GeyserStates_prev": {
+        "CoilActive": true, 
+        "T_Profile": [
+            10, 
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+        ]
+    }
+}
