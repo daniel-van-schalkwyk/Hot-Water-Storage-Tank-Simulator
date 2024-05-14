@@ -119,7 +119,7 @@ function SimulatorLite(uid, settingsPath, configPath)
         simParams.gCoeffs = modelParams.g_coeffs;
         simParams.h_ThermostatNorm = tankGeomData.h_thermistor_rel;
         simParams.hysteresisBand = tankGeomData.hysteresisBand;
-        simParams.setTemp = tankGeomData.setTemp;
+        simParams.setTemp = geyserStateData.GeyserStates_current.SetTemp;
 
         % Call the main generic state-space function with prepared
         % inputs

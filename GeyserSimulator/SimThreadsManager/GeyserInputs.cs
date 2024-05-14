@@ -1,5 +1,6 @@
 namespace GeyserSimulator.SimThreadsManager;
 
+[Serializable]
 public class GeyserInputs
 {
     public object Power { get; set; }
