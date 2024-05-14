@@ -1,4 +1,4 @@
-function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeomModel, simParams, inputs)
+function [T_mat, dTdt_mat, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomModel, simParams, inputs)
     %% Description:
     % This method envelopes the state space convection model and 
     % performs a complex sate space calculation using different heat transfer 
@@ -42,7 +42,8 @@ function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeo
     T_vec_next = zeros(nodes, simTime_steps);
     T_vec_current = T_initial;
     dTdt_mat = zeros(nodes, simTime_steps);
-    coilStates = zeros(simTime_steps);
+    coilStates = zeros(simTime_steps, 1);
+    thermostatTemps = zeros(simTime_steps, 1);
     prevCoilState = 0;
     for time = 1:1:simTime_steps
     
@@ -58,6 +59,7 @@ function [T_mat, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeo
         % Get the current thermostat temp
         ThermostatPosIndex = ceil(h_ThermostatNorm*length(T_vec_current));
         thermostatTemp = mean([T_vec_current(ThermostatPosIndex), T_vec_current(ThermostatPosIndex+1)]);
+        thermostatTemps(time) = thermostatTemp;
 
         % Check the state of flow: charging or discharging
         if(massFlow_current >= 0)

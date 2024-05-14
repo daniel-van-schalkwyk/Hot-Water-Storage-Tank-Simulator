@@ -15,6 +15,7 @@
         "n_mix_discharge": 1,
         "n_mix_charge": 1,
         "dt": 5,
+        "T_ref": 0,
         "nodeNumber": 9,
         "tempInit": [
             20,
@@ -28,15 +29,14 @@
             20
         ],
         "U_layers": [
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
         ],
         "U_Ambient": [
             0.5,

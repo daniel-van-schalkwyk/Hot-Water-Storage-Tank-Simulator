@@ -1,7 +1,7 @@
 function [Ex_actual, Ex_ideal, Ex_mixed, Ex_number, Ex_exp_perLayer, U_tank, U_tank_avg] = GetExergyNumber(strVector, nodeVolumes, V_tank, T_ref, rho_w, cp_w, smoothValue)
     
     if(nargin < 7)
-        smoothValue = 100;
+        smoothValue = 1;
     end
     cp_all = cp_w(strVector + 273.15);
     rho_all = rho_w(strVector+ 273.15);

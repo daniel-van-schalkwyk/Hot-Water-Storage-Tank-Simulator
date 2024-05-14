@@ -1,6 +1,6 @@
 namespace GeyserSimulator.SimThreadsManager;
 
-public class GeyserStates
+public class GeyserInputs
 {
     public object Power { get; set; }
     public object SetTemp { get; set; }

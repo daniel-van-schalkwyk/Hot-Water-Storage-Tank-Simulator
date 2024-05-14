@@ -1,4 +1,3 @@
-using EWH_Sim_PreProcessor.ConfigStructures;
 using GeyserSimulator.ConfigStructures;
 using GeyserSimulator.SimThreadsManager;
 using InfluxDB.Client.Core;
@@ -13,6 +12,7 @@ public class MqttMessages
     [Column(IsTimestamp = true)] public DateTime Timestamp { get; set; }
     public MqttMessages()
     {
+        Uid = "";
         Timestamp = DateTime.Now.ToLocalTime();
     }
 }
@@ -21,6 +21,11 @@ public class MqttMessages
 class SetMessage : MqttMessages
 {
     public List<NameValuePair> Targets;
+
+    public SetMessage()
+    {
+        Targets = new List<NameValuePair>();
+    }
 }
 
 class DeleteMessage : MqttMessages
@@ -40,11 +45,12 @@ public class EventMessage : MqttMessages
 public class InfoMessage : MqttMessages
 {
     public string? Description { get; set; }
-    public GeyserStates States { get; set; }
+    public GeyserInputs inputs { get; set; }
 
-    public InfoMessage()
+    public InfoMessage(string type = "Info")
     {
-        Type = "INFO";
+        Type = type;
+        inputs = new GeyserInputs();
     }
 }
 
@@ -57,12 +63,19 @@ public class DataMessage : MqttMessages
     public decimal InternalEnergy { get; set; }
     [Column]
     public decimal CoilPower { get; set; }
+    [Column] 
+    public bool CoilState { get; set; }
     [Column]
     public decimal AmbientTemp { get; set; }
     [Column]
     public decimal SOC { get; set; }
     [Column]
-    public List<decimal>? TempProfile { get; set; }
+    public List<decimal>? T_Profile { get; set; }
+
+    public DataMessage(string type = "Data")
+    {
+        Type = type;
+    }
 }
 
 [Serializable]

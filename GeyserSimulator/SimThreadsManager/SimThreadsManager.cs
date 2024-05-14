@@ -15,7 +15,7 @@ namespace GeyserSimulator.SimThreadsManager;
 
 public class SimThreadsManager
 {
-    public Dictionary<string, GeyserStates?> AllGeyserStates { get; set; }
+    public Dictionary<string, GeyserInputs?> AllGeyserStates { get; set; }
 
     private IList<Thread> _threadPool;
     private readonly MqttManager _masterBrokerManager;
@@ -64,7 +64,7 @@ public class SimThreadsManager
             throw;
         }
 
-        AllGeyserStates = new Dictionary<string, GeyserStates?>();
+        AllGeyserStates = new Dictionary<string, GeyserInputs?>();
         _threadPool = new List<Thread>();
     }
 
@@ -78,13 +78,13 @@ public class SimThreadsManager
 
         foreach (JToken user in _userList)
         {
-            // Create new geyser state
-            GeyserStates geyserState = new();
+            // Create new geyser input
+            GeyserInputs geyserInput = new();
 
-            // Add new geyser state
+            // Add new geyser input
             UserMessage? userObj = user.ToObject<UserMessage>();
             if (userObj?.Uid != null)
-                if(!AllGeyserStates.TryAdd(userObj.Uid, geyserState))
+                if(!AllGeyserStates.TryAdd(userObj.Uid, geyserInput))
                     return;
 
             // Create a geyser simulation instance
@@ -94,7 +94,7 @@ public class SimThreadsManager
                 Thread geyserSimThread = new(() =>
                 {
                     if (userObj == null) return;
-                    GeyserSimInstance geyserSimSimInstance = new(userObj, ref geyserState, _settings);
+                    GeyserSimInstance geyserSimSimInstance = new(userObj, ref geyserInput, _settings);
                     geyserSimSimInstance.StartSim();
                 })
                 {
@@ -163,11 +163,11 @@ public class SimThreadsManager
                 UserMessage? message = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment).Deserialize<UserMessage>();
                 if (message?.Uid != null)
                 {
-                    // Create new geyser state
-                    GeyserStates geyserState = new();
+                    // Create new geyser input
+                    GeyserInputs geyserInput = new();
                     
-                    // Add new geyser state
-                    AllGeyserStates.TryAdd(message.Uid, geyserState);
+                    // Add new geyser input
+                    AllGeyserStates.TryAdd(message.Uid, geyserInput);
 
                     try
                     {
@@ -185,7 +185,7 @@ public class SimThreadsManager
                         // Call the script in a separate thread
                         Thread geyserSimThread = new(() =>
                         {
-                            GeyserSimInstance geyserSimSimInstance = new(message, ref geyserState, _settings);
+                            GeyserSimInstance geyserSimSimInstance = new(message, ref geyserInput, _settings);
                             geyserSimSimInstance.StartSim();
                         })
                         {
@@ -218,13 +218,13 @@ public class SimThreadsManager
             foreach (NameValuePair nameValuePair in setMessage?.Targets)
             {
                 if (nameValuePair?.name == null) return Task.FromResult(Task.CompletedTask);
-                PropertyInfo? property = typeof(GeyserStates).GetProperty(nameValuePair.name);
+                PropertyInfo? property = typeof(GeyserInputs).GetProperty(nameValuePair.name);
             
             
                 if (setMessage?.Uid == null)
                 {
-                    // Set all geyser state targets based on Master
-                    foreach (KeyValuePair<string, GeyserStates?> geyserState in AllGeyserStates)
+                    // Set all geyser input targets based on Master
+                    foreach (KeyValuePair<string, GeyserInputs?> geyserState in AllGeyserStates)
                     {
                         // Get the field by name using reflection
                         if (nameValuePair?.name == null) return Task.FromResult(Task.CompletedTask);
@@ -235,8 +235,8 @@ public class SimThreadsManager
                     return Task.FromResult(Task.CompletedTask);
                 }
             
-                // Get the user's current geyser state 
-                AllGeyserStates.TryGetValue(setMessage.Uid, out GeyserStates? state);
+                // Get the user's current geyser input 
+                AllGeyserStates.TryGetValue(setMessage.Uid, out GeyserInputs? state);
             
                 // Get the field by name using reflection
                 if (nameValuePair?.name == null) return Task.FromResult(Task.CompletedTask);

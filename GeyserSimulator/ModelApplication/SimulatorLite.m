@@ -11,18 +11,19 @@ function SimulatorLite(uid, settingsPath, configPath)
     certificateRoot = settings.ConnectionDetails.certPath;
 
     % Get pub and sub topics
-    global updateTopic pubDataTopic pubInfoTopic updateData updateReceived
+    global updateTopic pubDataTopic pubInfoTopic
     updateTopic = settings.SimulatorSubTopics.geyserUpdateTopicRoot + "/" + uid;
     pubDataTopic = settings.SimulatorPubTopics.geyserDataTopicRoot + "/" + uid;
     pubInfoTopic = settings.SimulatorPubTopics.geyserInfoTopicRoot + "/" + uid;
     
+    % Initialise global volatile variables
+    global updateData updateReceived
+
     % Connect to MQTT master client
     try 
         client = ConnectMqtt(broker, port, uid, username, password, certificateRoot);
     catch err
-        ackMessage.Description = "Error: " + err.message;
-        publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
-        return;
+        throw err;
     end
     
     % Subscribe to topics
@@ -57,29 +58,30 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     % Loop indefinitely to keep the listener running
-    ListenToMqtt(client, configData, tankGeom, modelParams)
+    ListenToMqtt(client, tankGeom, modelParams)
     
     % When done, disconnect from the broker
     disconnect(client)
 
     %% Functions
-    function [] = ListenToMqtt(client, configData, tankGeomData, modelParameters)
+    function [] = ListenToMqtt(client, tankGeomData, modelParameters)
         % Loop indefinitely to keep the listener running
         while true
             if(updateReceived)
                 % Acknowledge message
-                ackMessage.Description = "ACK";
+                ackMessage.Type = "ACK";
                 publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
                 updateReceived = false;
                 % Interpret the update message
                 try
                     % Run model with provided inputs
-                    Results = GeyserModel(updateData, configData, tankGeomData, modelParameters);
+                    Results = GeyserModel(updateData, tankGeomData, modelParameters);
                     % Publish results
                     publishMessage(client, pubDataTopic, jsonencode(Results))
                 catch err
                     ErrMessage.Description = "Error: " + err.message;
                     ErrMessage.StackTrace = err.stack.name;
+                    ErrMessage.Line = err.stack.line;
                     publishMessage(client, pubInfoTopic, jsonencode(ErrMessage))
                 end
             end
@@ -89,7 +91,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     %% The entry point for the geyser model
-    function T_mat_sim = GeyserModel(geyserStateData, configData, tankGeomData, modelParams)
+    function Results = GeyserModel(geyserStateData, tankGeomData, modelParams)
         % The model that is executed and that is used to generate the
         % results
         % Prepare arguments for model
@@ -122,7 +124,15 @@ function SimulatorLite(uid, settingsPath, configPath)
         % Call the main generic state-space function with prepared
         % inputs
         try 
-            [T_mat_sim, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
+            [T_mat_sim, ~, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
+            Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
+            Results.CoilState = coilStates(end);
+            Results.ThermostatTemp = thermostatTemps(end);
+            Results.T_Profile = T_mat_sim(end, :);
+            [~, ~, ~, ~, ~, U_tank] = GetExergyNumber(Results.T_Profile, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+            [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+            Results.InternalEnergy = U_tank/3600/1000;
+            Results.SOC = U_tank/U_tank_full*100;
         catch err
             throw err;
         end
@@ -211,7 +221,8 @@ function SimulatorLite(uid, settingsPath, configPath)
             modelParams.tempInit = configData.modelParameters.tempInit;
             modelParams.U_layers = configData.modelParameters.U_layers;
             modelParams.U_Ambient = configData.modelParameters.U_Ambient;
-            modelParams.g_coeffs = configData.modelParameters.g_coeffs;          
+            modelParams.g_coeffs = configData.modelParameters.g_coeffs;  
+            modelParams.T_ref = configData.modelParameters.T_ref;
         catch error
             fprintf('An error occurred: %s\n', error.message);
             throw ex;

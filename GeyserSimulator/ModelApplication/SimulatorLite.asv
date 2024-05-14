@@ -57,13 +57,13 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     % Loop indefinitely to keep the listener running
-    ListenToMqtt(client, configData, tankGeom, modelParams)
+    ListenToMqtt(client, tankGeom, modelParams)
     
     % When done, disconnect from the broker
     disconnect(client)
 
     %% Functions
-    function [] = ListenToMqtt(client, configData, tankGeomData, modelParameters)
+    function [] = ListenToMqtt(client, tankGeomData, modelParameters)
         % Loop indefinitely to keep the listener running
         while true
             if(updateReceived)
@@ -74,12 +74,14 @@ function SimulatorLite(uid, settingsPath, configPath)
                 % Interpret the update message
                 try
                     % Run model with provided inputs
-                    Results = GeyserModel(updateData, configData, tankGeomData, modelParameters);
+                    Results = GeyserModel(updateData, tankGeomData, modelParameters);
                     % Publish results
                     publishMessage(client, pubDataTopic, jsonencode(Results))
                 catch err
-                    ackMessage.Description = "Error: " + err.message;
-                    publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
+                    ErrMessage.Description = "Error: " + err.message;
+                    ErrMessage.StackTrace = err.stack.name;
+                    ErrMessage.Line = err.stack.line;
+                    publishMessage(client, pubInfoTopic, jsonencode(ErrMessage))
                 end
             end
             % Wait 5ms
@@ -88,7 +90,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     %% The entry point for the geyser model
-    function Results = GeyserModel(geyserStateData, configData, tankGeomData, modelParams)
+    function Results = GeyserModel(geyserStateData, tankGeomData, modelParams)
         % The model that is executed and that is used to generate the
         % results
         % Prepare arguments for model
@@ -99,41 +101,39 @@ function SimulatorLite(uid, settingsPath, configPath)
         
         simStartDateTime = geyserStateData.Sim.SimDateTime;
         timeScale = geyserStateData.Sim.TimeScale;
-        actualDuration = geyserStateData.Sim.SimDateTime.Duration_s;
-        simParams.delta_t_s = obj.Delta_t;          
+        actualDuration = geyserStateData.Sim.Duration_s;
+        simParams.delta_t_s = modelParams.dt;          
         simParams.simTime_steps = timeScale*actualDuration/modelParams.dt;
- 
-          
         simParams.rho_w = @(T) (1.49343e-3 - 3.7164e-6*T + 7.09782e-9*T.^2 - 1.90321e-20*T.^6).^-1;                    
-        simParams.cp_w = @(T) 8.15599e3 - 2.80627*10*T + 5.11283e-2*T.^2 - 2.17582e-13*T.^6;                     
-        simParams.T_initial = zeros(obj.TankGeom.n, 1) + obj.SimParams.tempInit;            
-        simParams.U_amb = zeros(tankGeomData.n, 1) + 2;
-        simParams.U_layers = zeros(nodes-1, 1) + 5;
-        simParams.n_mix_charge = 1;
-        simParams.n_mix_discharge = 1;
-        simParams.U_layers([1:simParams.n_mix_discharge, end-simParams.n_mix_charge:end]) = 10;
+        simParams.cp_w = @(T) 8.15599e3 - 2.80627*10*T + 5.11283e-2*T.^2 - 2.17582e-13*T.^6;      
+
+        simParams.T_initial = geyserStateData.GeyserStates_prev.T_Profile;            
+        simParams.U_amb = modelParams.U_Ambient;
+        simParams.U_layers = modelParams.U_layers;
+        simParams.n_mix_charge = modelParams.n_mix_charge;
+        simParams.n_mix_discharge = modelParams.n_mix_discharge;
         simParams.layerMixPortions = zeros(nodes-1, 1);
         simParams.layerMixPortions([1:1, end-1:end]) = 0;
-        simParams.eHeatingPower = obj.ConfigJson.input.coilPower.value;
-        simParams.gCoeffs = [
-                                        0.073178074
-                                        0.123146458
-                                        0.150144593
-                                        0.161594474
-                                        0.161867056
-                                        0.145951432
-                                        0.108614193
-                                        0
-                                        0
-                                            ];
-        simParams.h_ThermostatNorm = 0.43;
-        simParams.setTemp = 50;
+        simParams.eHeatingPower = geyserStateData.GeyserStates_current.Power;
+        simParams.gCoeffs = modelParams.g_coeffs;
+        simParams.h_ThermostatNorm = tankGeomData.h_thermistor_rel;
+        simParams.hysteresisBand = tankGeomData.hysteresisBand;
+        simParams.setTemp = tankGeomData.setTemp;
 
         % Call the main generic state-space function with prepared
         % inputs
-        [T_mat_sim, dTdt_mat, coilStates] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
-
-        Results.Description = "Model execution triggered";
+        try 
+            [T_mat_sim, ~, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
+            
+            Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
+            Results.CoilState = coilStates(end);
+            Results.ThermostatTemp = thermostatTemps(end);
+            Results.T_Profile = T_mat_sim(end, :);
+            [Ex_actual, Ex_ideal, Ex_mixed, Ex_number, Ex_exp_perLayer, U_tank,] = GetExergyNumber(Results.T_Profile, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+            Results.InternalEnergy = U_tank/3600/1000;
+        catch err
+            throw err;
+        end
     end
 
     %% Client connection method used to establish a connection with the master broker
@@ -189,7 +189,7 @@ function SimulatorLite(uid, settingsPath, configPath)
             geyserOut.t = configJson.geyser.tWall;                               
             geyserOut.L = configJson.geyser.longLength;                          
             geyserOut.R = configJson.geyser.diameter/2 - geyserOut.t;
-            geyserOut.h_thermostat_rel = configJson.geyser.h_thermistor_rel;
+            geyserOut.h_thermistor_rel = configJson.geyser.h_thermistor_rel;
             geyserOut.orientation = configJson.geyser.orientation;
 
             % Get model stuff relatng to geomerty
@@ -219,7 +219,8 @@ function SimulatorLite(uid, settingsPath, configPath)
             modelParams.tempInit = configData.modelParameters.tempInit;
             modelParams.U_layers = configData.modelParameters.U_layers;
             modelParams.U_Ambient = configData.modelParameters.U_Ambient;
-            modelParams.g_coeffs = configData.modelParameters.g_coeffs;          
+            modelParams.g_coeffs = configData.modelParameters.g_coeffs;  
+            modelParams.T_ref = configData.modelParameters.T_ref;
         catch error
             fprintf('An error occurred: %s\n', error.message);
             throw ex;

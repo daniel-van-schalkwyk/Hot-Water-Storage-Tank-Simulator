@@ -15,15 +15,15 @@ namespace GeyserSimulator.SimThreadsManager;
 public class GeyserSimInstance
 {
     private readonly UserMessage _user;
-    private GeyserStates _geyserStates;
+    private GeyserInputs _geyserInputs;
     private MqttManager? _mqttUserContainer;
     private readonly IniData _settings;
     private string _infoOutTopic;
 
-    public GeyserSimInstance(UserMessage user, ref GeyserStates geyserStates, IniData settings)
+    public GeyserSimInstance(UserMessage user, ref GeyserInputs geyserInputs, IniData settings)
     {
         _user = user;
-        _geyserStates = geyserStates;
+        _geyserInputs = geyserInputs;
         _settings = settings;
         _infoOutTopic = settings["TopicsPub"]["geyserInfo"];
         // Initialise fileWorker
@@ -120,15 +120,15 @@ public class GeyserSimInstance
 
             if (!await CheckUid(setMessage.Uid)) return Task.CompletedTask;
             
-            // Set the state of the geyser
-            SetGeyserState(setMessage, ref _geyserStates);
+            // Set the input of the geyser
+            SetGeyserState(setMessage, ref _geyserInputs);
             if (_mqttUserContainer is not null)
             {
                 await _mqttUserContainer.Publish(_infoOutTopic,
                     new InfoMessage
                         {
-                            Description = "SET command received for geyser state", Uid = setMessage.Uid,
-                            States = _geyserStates
+                            Description = "SET command received for geyser input", Uid = setMessage.Uid,
+                            inputs = _geyserInputs
                         }
                         .Serialize());
             }
@@ -142,22 +142,22 @@ public class GeyserSimInstance
         if (_mqttUserContainer is null) return false;
         await _mqttUserContainer.Publish(_infoOutTopic,
             new InfoMessage
-                    { Description = $"SET command received with incorrect UID, please use {_user.Uid} as your UID", Uid = _user.Uid, States = _geyserStates}
+                    { Description = $"SET command received with incorrect UID, please use {_user.Uid} as your UID", Uid = _user.Uid, inputs = _geyserInputs}
                 .Serialize());
         return false;
 
     }
 
-    private static void SetGeyserState(SetMessage setMessage, ref GeyserStates state)
+    private static void SetGeyserState(SetMessage setMessage, ref GeyserInputs input)
     {
         // Get the field by name using reflection
         foreach (NameValuePair targetPair in setMessage.Targets)
         {
             if (targetPair.name == null);
-            PropertyInfo? property = typeof(GeyserStates).GetProperty(targetPair.name);
+            PropertyInfo? property = typeof(GeyserInputs).GetProperty(targetPair.name);
 
             // Get the value of the field
-            property?.SetValue(state, targetPair.value);
+            property?.SetValue(input, targetPair.value);
         }
     }
 }
