@@ -267,7 +267,7 @@ function SimulatorLite(uid, settingsPath, configPath)
             simTimeStamp = simTimeStamp + seconds(simParams.simTime_steps * modelParams.dt);
             Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS');
             Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
-            Results.States.CoilState = coilStates(end);
+            Results.States.CoilActive = logical(coilStates(end));
             Results.States.SetTemp = simParams.setTemp;
             Results.Inputs = inputs;
             Results.ThermostatTemp = thermostatTemps(end);
@@ -276,7 +276,6 @@ function SimulatorLite(uid, settingsPath, configPath)
             [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
             Results.InternalEnergy = U_tank/3600/1000;
             Results.SOC = U_tank/U_tank_full*100;
-            
 
             % Update T_profile for next iteration
             simParams.T_initial = T_mat_sim(end, :)';
