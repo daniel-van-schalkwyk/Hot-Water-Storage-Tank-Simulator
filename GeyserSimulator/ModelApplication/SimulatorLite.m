@@ -263,18 +263,23 @@ function SimulatorLite(uid, settingsPath, configPath)
         % Call the main generic state-space function with prepared
         % inputs
         try 
+            % run the model
             [T_mat_sim, ~, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
+
+            % Update Parameters and send results
             simTimeStamp = simTimeStamp + seconds(simParams.simTime_steps * modelParams.dt);
             Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS');
-            Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
             Results.States.CoilActive = logical(coilStates(end));
             Results.States.SetTemp = simParams.setTemp;
+            Results.States.ThermostatTemp = thermostatTemps(end);
             Results.Inputs = inputs;
-            Results.ThermostatTemp = thermostatTemps(end);
-            Results.T_Profile = T_mat_sim(end, :);
-            [~, ~, ~, ~, ~, U_tank] = GetExergyNumber(Results.T_Profile, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+            Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
+            [Ex_tank, ~, ~, ~, ~, U_tank] = GetExergyNumber(T_mat_sim(end, :), tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
             [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
-            Results.InternalEnergy = U_tank/3600/1000;
+            Results.Energy = U_tank/3600/1000;
+            Results.Exergy = Ex_tank/3600/1000;
+            Results.SOC = U_tank/U_tank_full*100;
+            Results.T_Profile = T_mat_sim(end, :);
             Results.SOC = U_tank/U_tank_full*100;
 
             % Update T_profile for next iteration
