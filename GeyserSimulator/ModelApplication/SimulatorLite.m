@@ -190,9 +190,11 @@ function SimulatorLite(uid, settingsPath, configPath)
                 infoMessage = "";
                 try 
                     simParams.eHeatingPower = geyserStateData.Params.States.Power;
+                    inputs.Power = geyserStateData.Params.States.Power;
                     infoMessage = infoMessage + "Power setup to " + string(simParams.eHeatingPower);
                 catch
                     simParams.eHeatingPower = 3000;
+                    inputs.Power = 3000;
                 end
                 try 
                     simParams.setTemp = geyserStateData.Params.States.SetTemp;
@@ -223,6 +225,7 @@ function SimulatorLite(uid, settingsPath, configPath)
                 infoMessage = "";
                 try 
                     simParams.eHeatingPower = geyserStateData.Params.States.Power;
+                    inputs.Power = geyserStateData.Params.States.Power;
                     infoMessage = infoMessage + "Power updated to " + string(simParams.eHeatingPower);
                 catch
                 end
@@ -262,15 +265,18 @@ function SimulatorLite(uid, settingsPath, configPath)
         try 
             [T_mat_sim, ~, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
             simTimeStamp = simTimeStamp + seconds(simParams.simTime_steps * modelParams.dt);
-            Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS.FFF');
+            Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS');
             Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
-            Results.CoilState = coilStates(end);
+            Results.States.CoilState = coilStates(end);
+            Results.States.SetTemp = simParams.setTemp;
+            Results.Inputs = inputs;
             Results.ThermostatTemp = thermostatTemps(end);
             Results.T_Profile = T_mat_sim(end, :);
             [~, ~, ~, ~, ~, U_tank] = GetExergyNumber(Results.T_Profile, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
             [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
             Results.InternalEnergy = U_tank/3600/1000;
             Results.SOC = U_tank/U_tank_full*100;
+            
 
             % Update T_profile for next iteration
             simParams.T_initial = T_mat_sim(end, :)';
