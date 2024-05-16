@@ -12,6 +12,7 @@ classdef EwhGeometryTools
                 tankGeom.z_delta = tankGeom.L/tankGeom.n;
                 tankGeom.h_layers = linspace(tankGeom.z_delta, tankGeom.L, tankGeom.n);
                 tankGeom.h_sensors = tankGeom.h_layers - tankGeom.z_delta/2;
+                tankGeom.h_sensorsNorm = tankGeom.h_sensors/(2*tankGeom.R);
                 % Determine the node volumes of the CHP buffer tank
                 tankGeom.layerVolumes = EwhGeometryTools.getNodeVolumes(tankGeom);
             elseif(strcmp(tankGeom.orientation, 'H'))
@@ -21,6 +22,7 @@ classdef EwhGeometryTools
                     tankGeom.z_delta = 2*tankGeom.R/tankGeom.n;
                     tankGeom.h_layers = linspace(tankGeom.z_delta, 2*tankGeom.R, tankGeom.n);
                     tankGeom.h_sensors = tankGeom.h_layers - tankGeom.z_delta/2;
+                    tankGeom.h_sensorsNorm = tankGeom.h_sensors/(2*tankGeom.R);
                     tankGeom.layerVolumes = EwhGeometryTools.getNodeVolumes(tankGeom);
                 elseif(strcmp(tankGeom.layerConfig, 'CV'))
                     % In this case, the volume of each layer will be constant while the
@@ -34,6 +36,7 @@ classdef EwhGeometryTools
                     end
                     tankGeom.h_layers = h_layers;
                     tankGeom.z_delta = diff(h_layers);
+                    tankGeom.h_sensorsNorm = tankGeom.h_layers/(2*tankGeom.R);
                 else
                     error('Unrecognised layer configuration');
                 end

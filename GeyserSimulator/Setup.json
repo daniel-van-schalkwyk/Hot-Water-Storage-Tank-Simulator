@@ -1,6 +1,6 @@
 {
     "Uid": "Uid", 
-    "Type": "Update", 
+    "Type": "Setup", 
     "Mode": "Continuous",
     "Detailed": true,
     "Params": {

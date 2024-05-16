@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace EWH_Sim_PreProcessor.ScriptCallManagement;
+namespace GeyserSimulator.SimThreadsManager;
 
 public class ScriptCaller
 {

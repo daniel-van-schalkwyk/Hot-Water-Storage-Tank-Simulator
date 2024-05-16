@@ -38,6 +38,7 @@ function [T_mat, dTdt_mat, coilStates, thermostatTemps] = StateSpaceConvectionMi
     % Get area of exposed to the environment
     A_exposed = tankGeomModel.A_exposed;
     
+    z_delta = tankGeomModel.z_delta;
     % Simulation run
     T_vec_next = zeros(nodes, simTime_steps);
     T_vec_current = T_initial;
@@ -92,8 +93,8 @@ function [T_mat, dTdt_mat, coilStates, thermostatTemps] = StateSpaceConvectionMi
             c_v_fracPrev = @(layer) c_v_Tprev(layer)/c_v_Tcurrent(layer);
             c_v_fracNext = @(layer) c_v_Tnext(layer)/c_v_Tcurrent(layer);
 
-            hx_prevLayer = @(layer) U_layers(layer-1)*A_crossSec(layer-1)./layerCapacities(layer);
-            hx_nextLayer = @(layer) U_layers(layer)*A_crossSec(layer)./layerCapacities(layer);
+            hx_prevLayer = @(layer) U_layers(layer-1)*A_crossSec(layer-1)./layerCapacities(layer)/z_delta;
+            hx_nextLayer = @(layer) U_layers(layer)*A_crossSec(layer)./layerCapacities(layer)/z_delta;
             hx_ambient = @(layer) U_amb(layer)*A_exposed(layer)./layerCapacities(layer);
             if(layer == 1)
                 F_mat(layer, layer+1) = hx_nextLayer(layer) + c_v_fracNext(layer) * 1/delta_t_s*(layerMixPortions(layer));

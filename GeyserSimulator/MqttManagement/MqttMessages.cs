@@ -70,7 +70,7 @@ public class DataMessage : MqttMessages
     [Column]
     public decimal SOC { get; set; }
     [Column]
-    public List<decimal>? T_Profile { get; set; }
+    public object? T_Profile { get; set; }
 
     public DataMessage(string type = "Data")
     {

@@ -29,14 +29,14 @@
             20
         ],
         "U_layers": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            4.3708,
+            2.2298,
+            1.9093,
+            2.4764,
+            1.9199,
+            1.4782,
+            1.7123,
+            2.3768
         ],
         "U_Ambient": [
             0.5,
@@ -72,38 +72,6 @@
         },
         "events": {
             "discharge": [
-                {
-                    "start": "00:00:00",
-                    "stop": "00:30:00",
-                    "inletTemp": {
-                        "unit": "°C",
-                        "value": 15
-                    },
-                    "flowRate": {
-                        "unit": "L/min",
-                        "value": 1
-                    },
-                    "duration": {
-                        "unit": "timeSteps",
-                        "value": 30
-                    }
-                },
-               {
-                   "start": "05:00:00",
-                   "stop": "06:30:00",
-                   "inletTemp": {
-                       "unit": "°C",
-                       "value": 15
-                   },
-                   "flowRate": {
-                       "unit": "L/min",
-                       "value": 2
-                   },
-                   "duration": {
-                       "unit": "timeSteps",
-                       "value": 30
-                   }
-               }
             ],
             "charge": [
             ],
