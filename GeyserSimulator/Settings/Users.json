@@ -30,7 +30,6 @@
       "Username": "geyserSimUser1",
       "Password": "geyserSimUser1!"
     },
-    "Type": "Add",
     "Uid": "U001",
     "Timestamp": "2024-05-12T20:53:04.6529543+02:00"
   },
@@ -43,16 +42,7 @@
       "Username": "geyser2",
       "Password": "QwEr1234"
     },
-    "Type": "AddUser",
-    "Uid": "U01",
+    "Uid": "U002",
     "Timestamp": "2024-05-14T21:23:37.0522556+02:00"
-  },
-  {
-    "Name": null,
-    "IsAdmin": false,
-    "Credentials": null,
-    "Type": null,
-    "Uid": "",
-    "Timestamp": "2024-05-14T21:30:55.1282538+02:00"
   }
 ]

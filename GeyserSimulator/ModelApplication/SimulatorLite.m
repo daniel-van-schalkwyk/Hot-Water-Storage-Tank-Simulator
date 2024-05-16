@@ -22,7 +22,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     % Initialise global volatile variables
     global updateData stateData setupData 
     global updateReceived stateReceived setupReceived 
-    global simParams inputs
+    global simParams inputs simTimeStamp
     global client
 
     % Connect to MQTT master client
@@ -132,10 +132,17 @@ function SimulatorLite(uid, settingsPath, configPath)
                         end
 
                         % Create timer with geyser model handler
+                        try 
+                            simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss.SSS','TimeZone', 'local');
+                        catch
+                            simTimeStamp = datetime('now', 'Format','uuuu-MM-dd''T''HH:mm:ss.SSS', 'TimeZone','local');
+                        end
+                        
                         updateTimer = timer(Period=setupData.Params.Duration_s, ExecutionMode="fixedRate", BusyMode="drop", TasksToExecute=inf, StartDelay=0, TimerFcn={@GeyserModelHandler, tankGeomData, modelParameters});
                         start(updateTimer);
                     elseif(strcmp(setupData.Mode, "OneShot"))
                         % Delete existing timers
+                        simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss.SSS','TimeZone','local');
                         T = timerfind;
                         if ~isempty(T)
                             stop(T)
@@ -254,6 +261,8 @@ function SimulatorLite(uid, settingsPath, configPath)
         % inputs
         try 
             [T_mat_sim, ~, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
+            simTimeStamp = simTimeStamp + seconds(simParams.simTime_steps * modelParams.dt);
+            Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS.FFF');
             Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
             Results.CoilState = coilStates(end);
             Results.ThermostatTemp = thermostatTemps(end);
