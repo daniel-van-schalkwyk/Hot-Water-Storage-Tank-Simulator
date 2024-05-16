@@ -67,7 +67,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     % When done, disconnect from the broker
     disconnect(client)
 
-    %% Functions
+    %% Main broker listener loop
     function [] = ListenToMqtt(client, tankGeomData, modelParameters)
 
         simParams.gCoeffs = modelParameters.g_coeffs;
@@ -107,8 +107,21 @@ function SimulatorLite(uid, settingsPath, configPath)
 
                 % Interpret the state message
                 try
-                   
-                    
+                   if(strcmp(stateData.Mode, "Stop"))
+                       publishAck("Stop state received", client)
+                       stopAllTimers();
+
+                   elseif(strcmp(stateData.Mode, "Start"))
+                       publishAck("Start state received", client)
+                       
+                   elseif(strcmp(stateData.Mode, "Exit"))
+                       publishAck("Exit state received. Client will disconnect.", client)
+                       stopAllTimers();
+                       break;
+                   else
+                       ex = MException("Unrecognised Value", "'Mode' value unrecognised: Either 'Start', 'Stop', or 'Exit'");
+                       ex.throw;
+                   end
                 catch err
                     publishError(err, client);
                 end
@@ -125,11 +138,7 @@ function SimulatorLite(uid, settingsPath, configPath)
                         UpdateGeyserStates(setupData, modelParameters);
 
                         % Delete existing timers
-                        T = timerfind;
-                        if ~isempty(T)
-                            stop(T)
-                            delete(T)
-                        end
+                        stopAllTimers
 
                         % Create timer with geyser model handler
                         try 
@@ -143,13 +152,8 @@ function SimulatorLite(uid, settingsPath, configPath)
                     elseif(strcmp(setupData.Mode, "OneShot"))
                         % Delete existing timers
                         simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss.SSS','TimeZone','local');
-                        T = timerfind;
-                        if ~isempty(T)
-                            stop(T)
-                            delete(T)
-                        end
+                        stopAllTimers
                     else
-                        % ?
                         ex = MException("Unrecognised Value", "'Mode' value unrecognised: Either 'Continuous' or 'OneShot'");
                         ex.throw;
                     end
@@ -163,7 +167,7 @@ function SimulatorLite(uid, settingsPath, configPath)
         end
     end
     
-    %% 
+    %% A handler function for the update timer 
     function GeyserModelHandler(obj, event, tankGeomData, modelParameters)
         
         % Call the geyser model with current parameters
@@ -334,10 +338,10 @@ function SimulatorLite(uid, settingsPath, configPath)
     
     %% Used to write messages to the master broker
     function publishMessage(client, topic, payload)
-        write(client, topic, payload, QualityOfService = 1, Retain = true)
+        write(client, topic, payload, QualityOfService = 1, Retain = false)
     end
 
-    %%
+    %% Used to publish errors encountered in the code to the broker
     function publishError(err, client)
         errMessage.Type = "Error";
         errMessage.Cause = err.cause;
@@ -347,7 +351,7 @@ function SimulatorLite(uid, settingsPath, configPath)
         publishMessage(client, pubInfoTopic, jsonencode(errMessage))
     end
 
-    %%
+    %% Used to publish Acknowledge messages to the broker
     function publishAck(message, client)
         ackMessage.Type = "ACK";
         ackMessage.Description = message;
@@ -403,6 +407,14 @@ function SimulatorLite(uid, settingsPath, configPath)
         end
     end
 
+    %% Finds any timer and stops it
+    function stopAllTimers()
+        T = timerfind;
+        if ~isempty(T)
+            stop(T)
+            delete(T)
+        end
+    end
     %% Function to import model parameters
     function modelParams = importModelParameters(configData)
         try 
