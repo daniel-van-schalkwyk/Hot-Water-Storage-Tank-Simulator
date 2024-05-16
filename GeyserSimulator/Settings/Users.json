@@ -33,5 +33,26 @@
     "Type": "Add",
     "Uid": "U001",
     "Timestamp": "2024-05-12T20:53:04.6529543+02:00"
+  },
+  {
+    "Name": "Clayton Pheiffer",
+    "IsAdmin": false,
+    "Credentials": {
+      "BrokerUrl": "3feb1c7e16e441ccb4a5070445fe2ca3.s1.eu.hivemq.cloud",
+      "Port": 8883,
+      "Username": "geyser2",
+      "Password": "QwEr1234"
+    },
+    "Type": "AddUser",
+    "Uid": "U01",
+    "Timestamp": "2024-05-14T21:23:37.0522556+02:00"
+  },
+  {
+    "Name": null,
+    "IsAdmin": false,
+    "Credentials": null,
+    "Type": null,
+    "Uid": "",
+    "Timestamp": "2024-05-14T21:30:55.1282538+02:00"
   }
 ]

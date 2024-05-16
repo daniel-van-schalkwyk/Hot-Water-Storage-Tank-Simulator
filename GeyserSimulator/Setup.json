@@ -1,6 +1,6 @@
 {
     "Uid": "Uid", 
-    "Type": "Update", 
+    "Type": "Setup", 
     "Mode": "Continuous",
     "Params": {
         "SimDateTime": "2024-05-13T00:00:00.000+02", 

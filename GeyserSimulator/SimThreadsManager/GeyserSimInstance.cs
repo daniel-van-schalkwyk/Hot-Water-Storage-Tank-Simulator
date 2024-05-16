@@ -41,6 +41,10 @@ public class GeyserSimInstance
     {
         _mqttUserContainer = await ConnectToUserBroker(_user);
         SetKeepALiveTimer(_user.Uid);
+
+        string argumentsForExe = $"{_user.Uid} \"{_settings["FilePaths"]["geyserSettings"]}\" \"{_settings["FilePaths"]["configFilePath"]}\"";
+        ScriptCaller scriptCaller = new(_settings["FilePaths"]["exeSimPath"], argumentsForExe);
+        scriptCaller.CallScript();
                                 
         while (true)
         {
@@ -60,6 +64,7 @@ public class GeyserSimInstance
     
     private static async void OnTimedEvent(object source, ElapsedEventArgs e, MqttManager? mqttContainer, string messageUid)
     {
+        if (mqttContainer is null) return;
         await mqttContainer.Publish("GeyserOut/Info", new InfoMessage{Description = "Session active", Uid = messageUid}.Serialize());
         Console.WriteLine($"Hi, thread [{messageUid}] still alive {DateTime.Now}");
     }

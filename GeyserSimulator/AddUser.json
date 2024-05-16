@@ -12,13 +12,13 @@
   },
   {
     "Type": "AddUser",
-    "Uid": "U0002",
-    "Name": "Student0002",
+    "Uid": "U01",
+    "Name": "Clayton Pheiffer",
     "Credentials": {
-      "BrokerUrl": "",
+      "BrokerUrl": "3feb1c7e16e441ccb4a5070445fe2ca3.s1.eu.hivemq.cloud",
       "Port": 8883,
-      "Username": "",
-      "Password": "!"
+      "Username": "geyser2",
+      "Password": "QwEr1234"
     }
   }
 ]

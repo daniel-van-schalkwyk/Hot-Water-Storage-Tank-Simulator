@@ -13,6 +13,11 @@ public static class MqttExtensions
         return JsonConvert.SerializeObject(mqttMessage, settings);
     }
     
+    public static string Serialize(this object dataMessage)
+    {
+        return JsonConvert.SerializeObject(dataMessage);
+    }
+    
     public static T? Deserialize<T>(this string mqttMessageString)
     {
         return JsonConvert.DeserializeObject<T>(mqttMessageString);
