@@ -2,8 +2,9 @@
     "Uid": "Uid", 
     "Type": "Setup", 
     "Mode": "Continuous",
+    "Detailed": true,
     "Params": {
-        "SimDateTime": "2024-05-13T00:00:00.000+02", 
+        "SimDateTime": "2024-05-13T00:00:00.000", 
         "TimeScale": 60,
         "Duration_s": 10,
         "States": {

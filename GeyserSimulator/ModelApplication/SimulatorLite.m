@@ -23,7 +23,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     global updateData stateData setupData 
     global updateReceived stateReceived setupReceived 
     global simParams inputs simTimeStamp
-    global client
+    global client updateTimer
 
     % Connect to MQTT master client
     try
@@ -63,9 +63,6 @@ function SimulatorLite(uid, settingsPath, configPath)
     
     % Loop indefinitely to keep the listener running
     ListenToMqtt(client, tankGeom, modelParams)
-    
-    % When done, disconnect from the broker
-    disconnect(client)
 
     %% Main broker listener loop
     function [] = ListenToMqtt(client, tankGeomData, modelParameters)
@@ -92,13 +89,25 @@ function SimulatorLite(uid, settingsPath, configPath)
                 % Interpret the update message
                 UpdateGeyserStates(updateData, modelParameters);
                 try
-                    % Run model with provided inputs
-                    Results = GeyserModel(tankGeomData, modelParameters);
-                    % Publish results
-                    publishMessage(client, pubDataTopic, jsonencode(Results))
-                catch err
-                    publishError(err, client);
+                    detailed = logical(updateData.Detailed);
+                catch
+                    detailed = false;
                 end
+                % Only run model if One shot is requested under update
+                % message
+                if(strcmp(updateData.Mode, "OneShot"))
+                    publishAck("OneShot requested", client)
+                    stopAllTimers();
+                    try
+                        % Run model with provided inputs
+                        Results = GeyserModel(tankGeomData, modelParameters, detailed);
+                        % Publish results
+                        publishMessage(client, pubDataTopic, jsonencode(Results))
+                    catch err
+                        publishError(err, client);
+                    end
+                end
+                
             
             elseif(stateReceived)
                 % Acknowledge message
@@ -109,11 +118,12 @@ function SimulatorLite(uid, settingsPath, configPath)
                 try
                    if(strcmp(stateData.Mode, "Stop"))
                        publishAck("Stop state received", client)
-                       stopAllTimers();
-
+                       stop(updateTimer)
+                       publishAck("Continuous mode inactive", client)
                    elseif(strcmp(stateData.Mode, "Start"))
                        publishAck("Start state received", client)
-                       
+                       start(updateTimer);
+                       publishAck("Continuous mode active", client)
                    elseif(strcmp(stateData.Mode, "Exit"))
                        publishAck("Exit state received. Client will disconnect.", client)
                        stopAllTimers();
@@ -129,7 +139,12 @@ function SimulatorLite(uid, settingsPath, configPath)
                 % Acknowledge message
                 publishAck("Sim setup received", client)
                 setupReceived = false;
-
+                try
+                    detailed = logical(setupData.Detailed);
+                catch
+                    detailed = false;
+                end
+                
                 % Interpret the setup message
                 try
                     if(strcmp(setupData.Mode, "Continuous"))
@@ -142,16 +157,17 @@ function SimulatorLite(uid, settingsPath, configPath)
 
                         % Create timer with geyser model handler
                         try 
-                            simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss.SSS','TimeZone', 'local');
+                            simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss','TimeZone', 'local');
                         catch
-                            simTimeStamp = datetime('now', 'Format','uuuu-MM-dd''T''HH:mm:ss.SSS', 'TimeZone','local');
+                            simTimeStamp = datetime('now', 'Format','uuuu-MM-dd''T''HH:mm:ss', 'TimeZone','local');
                         end
                         
-                        updateTimer = timer(Period=setupData.Params.Duration_s, ExecutionMode="fixedRate", BusyMode="drop", TasksToExecute=inf, StartDelay=0, TimerFcn={@GeyserModelHandler, tankGeomData, modelParameters});
+                        % Setup the callback timer
+                        updateTimer = timer(Period=setupData.Params.Duration_s, ExecutionMode="fixedRate", BusyMode="drop", TasksToExecute=inf, StartDelay=0, TimerFcn={@GeyserModelHandler, tankGeomData, modelParameters, detailed});
                         start(updateTimer);
                     elseif(strcmp(setupData.Mode, "OneShot"))
                         % Delete existing timers
-                        simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss.SSS','TimeZone','local');
+                        simTimeStamp = datetime(setupData.Params.SimDateTime,'InputFormat','uuuu-MM-dd''T''HH:mm:ss','TimeZone','local');
                         stopAllTimers
                     else
                         ex = MException("Unrecognised Value", "'Mode' value unrecognised: Either 'Continuous' or 'OneShot'");
@@ -168,12 +184,12 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     %% A handler function for the update timer 
-    function GeyserModelHandler(obj, event, tankGeomData, modelParameters)
+    function GeyserModelHandler(obj, event, tankGeomData, modelParameters, detailed)
         
         % Call the geyser model with current parameters
         try
             % Run model with provided inputs
-            Results = GeyserModel(tankGeomData, modelParameters);
+            Results = GeyserModel(tankGeomData, modelParameters, detailed);
             % Publish results
             publishMessage(client, pubDataTopic, jsonencode(Results))
         catch err
@@ -263,9 +279,13 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
 
     %% The entry point for the geyser model
-    function Results = GeyserModel(tankGeomData, modelParams)
+    function Results = GeyserModel(tankGeomData, modelParams, detailed)
         % Call the main generic state-space function with prepared
         % inputs
+
+        if(nargin < 3)
+            detailed = false;
+        end
         try 
             % run the model
             [T_mat_sim, ~, coilStates, thermostatTemps] = StateSpaceConvectionMixingModel(tankGeomData, simParams, inputs);
@@ -273,18 +293,35 @@ function SimulatorLite(uid, settingsPath, configPath)
             % Update Parameters and send results
             simTimeStamp = simTimeStamp + seconds(simParams.simTime_steps * modelParams.dt);
             Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS');
-            Results.States.CoilActive = logical(coilStates(end));
-            Results.States.SetTemp = simParams.setTemp;
-            Results.States.ThermostatTemp = thermostatTemps(end);
-            Results.Inputs = inputs;
-            Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
-            [Ex_tank, ~, ~, ~, ~, U_tank] = GetExergyNumber(T_mat_sim(end, :), tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
-            [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
-            Results.Energy = U_tank/3600/1000;
-            Results.Exergy = Ex_tank/3600/1000;
-            Results.SOC = U_tank/U_tank_full*100;
-            Results.T_Profile = T_mat_sim(end, :);
-            Results.SOC = U_tank/U_tank_full*100;
+            
+            if(detailed)
+                Results.States.SetTemp = simParams.setTemp;
+                Results.States.CoilActive = logical(coilStates);
+                Results.States.ThermostatTemp = thermostatTemps;
+                Results.Inputs = inputs;
+                Results.T_mean = getWeightedMean(T_mat_sim, tankGeomData.layerVolumes);
+                [Ex_tank, ~, ~, ~, ~, U_tank] = GetExergyNumber(T_mat_sim, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+                [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+                Results.Energy = U_tank/3600/1000;
+                Results.Exergy = Ex_tank/3600/1000;
+                Results.SOC = U_tank./U_tank_full*100;
+                Results.T_Profile = T_mat_sim;
+                Results.SOC = U_tank./U_tank_full*100;
+            else
+                Results.States.SetTemp = simParams.setTemp;
+                Results.States.CoilActive = logical(coilStates(end));
+                Results.States.ThermostatTemp = thermostatTemps(end);
+                Results.Inputs = inputs;
+                Results.T_mean = getWeightedMean(T_mat_sim(end, :), tankGeomData.layerVolumes);
+                [Ex_tank, ~, ~, ~, ~, U_tank] = GetExergyNumber(T_mat_sim(end, :), tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+                [~, ~, ~, ~, ~, U_tank_full] = GetExergyNumber(zeros(1, tankGeomData.n)+simParams.setTemp+tankGeomData.hysteresisBand/2, tankGeomData.layerVolumes', tankGeomData.V, modelParams.T_ref + 273.15, simParams.rho_w, simParams.cp_w); 
+                Results.Energy = U_tank/3600/1000;
+                Results.Exergy = Ex_tank/3600/1000;
+                Results.SOC = U_tank/U_tank_full*100;
+                Results.T_Profile = T_mat_sim(end, :);
+                Results.SOC = U_tank/U_tank_full*100;
+            end
+            
 
             % Update T_profile for next iteration
             simParams.T_initial = T_mat_sim(end, :)';
