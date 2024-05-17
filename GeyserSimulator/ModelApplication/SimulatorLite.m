@@ -62,10 +62,10 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     % Loop indefinitely to keep the listener running
-    ListenToMqtt(client, tankGeom, modelParams)
+    ListenToMqtt(client, tankGeom, modelParams, uid)
 
     %% Main broker listener loop
-    function [] = ListenToMqtt(client, tankGeomData, modelParameters)
+    function [] = ListenToMqtt(client, tankGeomData, modelParameters, uid)
 
         simParams.gCoeffs = modelParameters.g_coeffs;
             simParams.h_ThermostatNorm = tankGeomData.h_thermistor_rel;
@@ -100,7 +100,7 @@ function SimulatorLite(uid, settingsPath, configPath)
                     stopAllTimers();
                     try
                         % Run model with provided inputs
-                        Results = GeyserModel(tankGeomData, modelParameters, detailed);
+                        Results = GeyserModel(tankGeomData, modelParameters, detailed, uid);
                         % Publish results
                         publishMessage(client, pubDataTopic, jsonencode(Results))
                     catch err
@@ -163,7 +163,7 @@ function SimulatorLite(uid, settingsPath, configPath)
                         end
                         
                         % Setup the callback timer
-                        updateTimer = timer(Period=setupData.Params.Duration_s, ExecutionMode="fixedRate", BusyMode="drop", TasksToExecute=inf, StartDelay=0, TimerFcn={@GeyserModelHandler, tankGeomData, modelParameters, detailed});
+                        updateTimer = timer(Period=setupData.Params.Duration_s, ExecutionMode="fixedRate", BusyMode="drop", TasksToExecute=inf, StartDelay=0, TimerFcn={@GeyserModelHandler, tankGeomData, modelParameters, detailed, uid});
                         start(updateTimer);
                     elseif(strcmp(setupData.Mode, "OneShot"))
                         % Delete existing timers
@@ -184,12 +184,12 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
     
     %% A handler function for the update timer 
-    function GeyserModelHandler(obj, event, tankGeomData, modelParameters, detailed)
+    function GeyserModelHandler(obj, event, tankGeomData, modelParameters, detailed, uid)
         
         % Call the geyser model with current parameters
         try
             % Run model with provided inputs
-            Results = GeyserModel(tankGeomData, modelParameters, detailed);
+            Results = GeyserModel(tankGeomData, modelParameters, detailed, uid);
             % Publish results
             publishMessage(client, pubDataTopic, jsonencode(Results))
         catch err
@@ -279,7 +279,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     end
 
     %% The entry point for the geyser model
-    function Results = GeyserModel(tankGeomData, modelParams, detailed)
+    function Results = GeyserModel(tankGeomData, modelParams, detailed, uid)
         % Call the main generic state-space function with prepared
         % inputs
 
@@ -292,9 +292,12 @@ function SimulatorLite(uid, settingsPath, configPath)
 
             % Update Parameters and send results
             simTimeStamp = simTimeStamp + seconds(simParams.simTime_steps * modelParams.dt);
-            Results.Timestamp_sim = datestr(simTimeStamp, 'yyyy-mm-ddTHH:MM:SS');
+            Results.Timestamp_sim = datetime(simTimeStamp, "Format", "uuuu-MM-dd'T'HH:mm:ss.SSS");
+            Results.Uid = uid;
+            Results.Type = "Data";
             
             if(detailed)
+                
                 Results.States.SetTemp = simParams.setTemp;
                 Results.States.CoilActive = logical(coilStates);
                 Results.States.ThermostatTemp = thermostatTemps;
@@ -321,7 +324,6 @@ function SimulatorLite(uid, settingsPath, configPath)
                 Results.T_Profile = T_mat_sim(end, :);
                 Results.SOC = U_tank/U_tank_full*100;
             end
-            
 
             % Update T_profile for next iteration
             simParams.T_initial = T_mat_sim(end, :)';
@@ -381,6 +383,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     %% Used to publish errors encountered in the code to the broker
     function publishError(err, client)
         errMessage.Type = "Error";
+        errMessage.Timestamp = datetime("now", "Format", "uuuu-MM-dd'T'HH:mm:ss.SSS");
         errMessage.Cause = err.cause;
         errMessage.Description = err.message;
         errMessage.StackTrace = err.stack.name;
@@ -391,6 +394,7 @@ function SimulatorLite(uid, settingsPath, configPath)
     %% Used to publish Acknowledge messages to the broker
     function publishAck(message, client)
         ackMessage.Type = "ACK";
+        ackMessage.Timestamp = datetime("now", "Format", "uuuu-MM-dd'T'HH:mm:ss.SSS");
         ackMessage.Description = message;
         publishMessage(client, pubInfoTopic, jsonencode(ackMessage))
     end

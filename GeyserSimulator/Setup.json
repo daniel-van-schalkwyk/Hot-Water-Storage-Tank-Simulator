@@ -1,12 +1,12 @@
 {
-    "Uid": "Uid", 
+    "Uid": "A001", 
     "Type": "Setup", 
     "Mode": "Continuous",
-    "Detailed": true,
+    "Detailed": false,
     "Params": {
-        "SimDateTime": "2024-05-13T00:00:00.000", 
-        "TimeScale": 60,
-        "Duration_s": 10,
+        "SimDateTime": "2024-05-13T00:00:00", 
+        "TimeScale": 12,
+        "Duration_s": 5,
         "States": {
             "Power": 3000,
             "SetTemp": 60,
